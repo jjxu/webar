@@ -118,8 +118,8 @@
 			//video.src = URL.createObjectURL(stream);
 			//video.src = stream;
 			//video.play();
-			drawVideoAtCanvas(video, context);
-			localStream = stream;
+			//drawVideoAtCanvas(video, context);
+			//localStream = stream;
 		}
 
 		function errorFunc(error) {
@@ -130,7 +130,7 @@
 		function closeCamera() {
 			//	localStream.stop();
 			video.src = '';
-			clearInterval(timeID);
+			//clearInterval(timeID);
 		}
 		
 		function stopWebCam() {
