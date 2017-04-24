@@ -20,20 +20,20 @@
 </head>
 <body>
 <div class="div-a">
-	<video id="video" style="display: none">您的浏览器不支持video标签。 </video>
-	<canvas id="canvas" width="320"></canvas>
+	<video id="video" >您的浏览器不支持video标签。 </video>
+	<canvas id="canvas" width="320" style="display: none"></canvas>
 	<div align="center">
 		<button id="openButton" onclick="openCamera()">开启摄像头</button>
-		<button id="closeButton" onclick="closeCamera()">关闭摄像头</button>
+		<button id="closeButton" onclick="stopWebCam()">关闭摄像头</button>
 	</div>
 </div>
 	<script type="text/javascript">
 		var video = document.querySelector('video');
 		var canvas = document.getElementById('canvas');
 		//	canvas.style.width = window.innerWidth + 'px';
-		canvas.style.width = '100%';
-		canvas.style.height = '100%';
-		canvas.style.display = 'block';
+		video.style.width = '100%';
+		video.style.height = '100%';
+		video.style.display = 'block';
 		//canvas.style.height = window.innerHeight + 'px';
 		var context = canvas.getContext('2d');
 
@@ -89,7 +89,7 @@
 					video : {
 						//width: 320, height: 240,
 						'optional' : [ {
-							'sourceId' : exArray[0]
+							'sourceId' : exArray[1]
 						//0为前置摄像头，1为后置  
 						} ]
 					},
@@ -99,7 +99,7 @@
 				navigator.webkitGetUserMedia({
 					video : {
 						'optional' : [ {
-							'sourceId' : exArray[0]
+							'sourceId' : exArray[1]
 						//0为前置摄像头，1为后置  
 						} ]
 					},
@@ -113,12 +113,11 @@
 		//navigator.getUserMedia(constraints, successFunc, errorFunc);
 		var localStream;
 		function successFunc(stream) {
-			video.src = window.URL && window.URL.createObjectURL(stream)
-					|| stream;
+			video.src = window.URL && window.URL.createObjectURL(stream) || stream;
 			//video.src = URL.createObjectURL(stream);
 			//video.src = stream;
-			//video.play();
-			drawVideoAtCanvas(video, context);
+			video.play();
+			//drawVideoAtCanvas(video, context);
 			localStream = stream;
 		}
 
@@ -140,8 +139,8 @@
 				video.load();
 			}
 
-			if (cameraStream && cameraStream.stop) {
-				cameraStream.stop();
+			if (localStream && localStream.stop) {
+				localStream.stop();
 			}
 			stream = null;
 		}
@@ -153,8 +152,8 @@
 		      
 			timeID = window.setInterval(function() {
 				context.drawImage(video, 0, 0, canvas.width, canvas.height);
-			//	imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-			//	tick();
+				imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+				tick();
 			}, 100);
 		}
 
