@@ -20,21 +20,23 @@
 </head>
 <body>
 <div class="div-a">
-	<video id="video" >您的浏览器不支持video标签。 </video>
-	<canvas id="canvas" width="320" style="display: none"></canvas>
+	<video id="video" autoplay style="display: none">您的浏览器不支持video标签。 </video>
+	<canvas id="canvas" ></canvas>
 	<div align="center">
-		<button id="openButton" onclick="openCamera()">开启摄像头</button>
+		<button id="openButton" onclick="openWebCam()">开启摄像头</button>
 		<button id="closeButton" onclick="stopWebCam()">关闭摄像头</button>
 	</div>
 </div>
 	<script type="text/javascript">
 		var video = document.querySelector('video');
 		var canvas = document.getElementById('canvas');
-		//	canvas.style.width = window.innerWidth + 'px';
-		video.style.width = '100%';
-		video.style.height = '100%';
-		video.style.display = 'block';
-		//canvas.style.height = window.innerHeight + 'px';
+		
+		//video.style.width = window.innerWidth + 'px';;
+		//video.style.height = (window.innerHeight - 20) + 'px';
+		//video.style.display = 'block';
+		canvas.style.width = window.innerWidth + 'px';
+		canvas.style.height = (window.innerHeight - 20) + 'px';
+		canvas.style.display = 'block';
 		var context = canvas.getContext('2d');
 
 		var errocb = function() {
@@ -83,7 +85,7 @@
 			}
 		});
 
-		function openCamera() {
+		function openWebCam() {
 			if (navigator.getUserMedia) { // 标准的API
 				navigator.getUserMedia({
 					video : {
@@ -116,9 +118,10 @@
 			video.src = window.URL && window.URL.createObjectURL(stream) || stream;
 			//video.src = URL.createObjectURL(stream);
 			//video.src = stream;
-			video.play();
-			//drawVideoAtCanvas(video, context);
+			//video.play();
+			
 			localStream = stream;
+			drawVideoAtCanvas(video, context);
 		}
 
 		function errorFunc(error) {
@@ -132,7 +135,7 @@
 			clearInterval(timeID);
 		}
 		
-		function stopWebCam() {
+		function closeWebCam() {
 			if (video) {
 				video.pause();
 				video.src = '';
@@ -143,26 +146,38 @@
 				localStream.stop();
 			}
 			stream = null;
+			clearInterval(timeID);
 		}
 		
-		var imageData, pixels, detector;
+		var imageData, pixels, detector, markers;
+		
 		function drawVideoAtCanvas(video, context) {
 			pixels = [];
 		    detector = new AR.Detector();
-		      
+		     requestAnimationFrame(tick);
+			 /*
 			timeID = window.setInterval(function() {
-				context.drawImage(video, 0, 0, canvas.width, canvas.height);
-				imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-				tick();
-			}, 100);
+				if (video.readyState === video.HAVE_ENOUGH_DATA){
+					context.drawImage(video, 0, 0, canvas.width, canvas.height);
+					imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+					tick();
+				}
+			}, 100);*/
 		}
 
 		
 		function tick() {
+			requestAnimationFrame(tick);
+			if (video.readyState === video.HAVE_ENOUGH_DATA){
+					context.drawImage(video, 0, 0, canvas.width, canvas.height);
+					imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+					markers = detector.detect(imageData);
+					drawCorners(markers);
+			}
 		//	snapshot();
-			var markers = detector.detect(imageData);
-			drawCorners(markers);
+			
 	//		setTimeout(tick, 1);
+			
 		}
 
 
