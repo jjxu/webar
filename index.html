@@ -15,28 +15,33 @@
 <style>
 .div-relative{position:relative; color:#000; border:1px solid #000; width:100%; height:100%}    
 .div-a{ position:absolute; left:0px; top:0px;  background-color:transparent;  width:100%; height:100%}    
-.div-b{ position:absolute; left:30px; top:30px; background-color:transparent; width:100%; height:80%} 
+.div-b{ position:absolute; left:0px; top:00px; background-color:transparent; width:100%; height:80%} 
 </style>
 </head>
 <body>
 <div class="div-a">
-	<video id="video" autoplay style="display: none">您的浏览器不支持video标签。 </video>
-	<canvas id="canvas" ></canvas>
+	<canvas id="canvas"  style="display: none"></canvas>
+</div>
+<div class="div-a">
+	<video id="video" autoplay>您的浏览器不支持video标签。 </video>
+	
 	<div align="center">
 		<button id="openButton" onclick="openWebCam()">开启摄像头</button>
 		<button id="closeButton" onclick="stopWebCam()">关闭摄像头</button>
 	</div>
+
 </div>
+
 	<script type="text/javascript">
 		var video = document.querySelector('video');
 		var canvas = document.getElementById('canvas');
 		
-		//video.style.width = window.innerWidth + 'px';;
-		//video.style.height = (window.innerHeight - 20) + 'px';
-		//video.style.display = 'block';
+		video.style.width = window.innerWidth + 'px';;
+		video.style.height = (window.innerHeight - 20) + 'px';
+		video.style.display = 'block';
 		canvas.style.width = window.innerWidth + 'px';
 		canvas.style.height = (window.innerHeight - 20) + 'px';
-		canvas.style.display = 'block';
+		//canvas.style.display = 'block';
 		var context = canvas.getContext('2d');
 
 		var errocb = function() {
@@ -118,7 +123,7 @@
 			video.src = window.URL && window.URL.createObjectURL(stream) || stream;
 			//video.src = URL.createObjectURL(stream);
 			//video.src = stream;
-			//video.play();
+			video.play();
 			
 			localStream = stream;
 			drawVideoAtCanvas(video, context);
@@ -146,7 +151,7 @@
 				localStream.stop();
 			}
 			stream = null;
-			clearInterval(timeID);
+		//	clearInterval(timeID);
 		}
 		
 		var imageData, pixels, detector, markers;
@@ -172,7 +177,7 @@
 					context.drawImage(video, 0, 0, canvas.width, canvas.height);
 					imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 					markers = detector.detect(imageData);
-					drawCorners(markers);
+				//	drawCorners(markers);
 			}
 		//	snapshot();
 			
