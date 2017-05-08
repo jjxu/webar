@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>WebAR</title>
+	<script type="text/javascript" src="./js-aruco/cv.js"></script>
+	<script type="text/javascript" src="./js-aruco/aruco.js"></script>
+<!--	<script type="text/javascript" src="./three/three.js"></script> -->
+	<script type="text/javascript" src="./three/three.min.js"></script>
+	<script type="text/javascript" src="./three/STLLoader.js"></script>
+    <script type="text/javascript" src="./three/stats.js"></script>
+    <script type="text/javascript" src="./three/dat.gui.js"></script>
+<style>
+.div-relative{position:relative; color:#000; border:1px solid #000; width:100%; height:100%}    
+.div-a{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:100%}    
+.div-b{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:80%} 
+</style>
+</head>
+<body>
+<div class="div-a">
+	<canvas id="canvas" style="display: none"></canvas>
+</div>
+<div class="div-a">
+	<video id="video" autoplay>您的浏览器不支持video标签。 </video>
+	
+	<div align="center">
+		<button id="openButton" onclick="openWebCam()">开启摄像头</button>
+		<button id="closeButton" onclick="closeWebCam()">关闭摄像头</button>
+	</div>
+	
+</div>
+
+	<script type="text/javascript">
+		var video = document.querySelector('video');
+		var canvas = document.getElementById('canvas');
+		
+		video.style.width = window.innerWidth + 'px';
+		video.style.height = window.innerHeight + 'px';
+		video.style.display = 'block';
+
+		canvas.style.width = window.innerWidth + 'px';
+		canvas.style.height = window.innerHeight + 'px';
+		canvas.style.display = 'none';
+		var context = canvas.getContext('2d');
+
+		/*		function test() {
+		 if (navigator.getUserMedia) {
+		 alert("navigator.getUserMedia");
+		 }
+		 if (navigator.webkitGetUserMedia) {
+		 alert("navigator.webkitGetUserMedia");
+		 }
+		 if (navigator.mozGetUserMedia) {
+		 alert("navigator.mozGetUserMedia");
+		 }
+		 if (navigator.msGetUserMedia) {
+		 alert("navigator.msGetUserMedia");
+		 }
+		 } */
+		function hasGetUserMedia() {
+			return  !!(navigator.getUserMedia
+				|| navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+				|| navigator.msGetUserMedia);
+		}
+		
+		window.URL = window.URL || window.webkitURL || window.mozURL
+				|| window.msURL;
+		var constraints = {
+			video : true,
+			audio : false,
+		}
+
+		var exArray = []; //存储设备源ID  
+		MediaStreamTrack.getSources(function(sourceInfos) {
+			for (var i = 0; i != sourceInfos.length; ++i) {
+				var sourceInfo = sourceInfos[i];
+				//这里会遍历audio,video，所以要加以区分  
+				/*
+				if(sourceInfo.kind == "video" && sourceInfo.facing == "environment") {
+					constraints.video = {
+							optional: [{sourceId: sourceInfo.id}]
+					}
+				}*/
+				if (sourceInfo.kind === 'video') {
+					exArray.push(sourceInfo.id);
+				}
+			}
+		});
+
+		function openWebCam() {
+			if (navigator.getUserMedia) { // 标准的API
+				navigator.getUserMedia({
+					video : {
+						//width: 320, height: 240,
+						'optional' : [ {
+							'sourceId' : exArray[0]
+						//0为前置摄像头，1为后置  
+						} ]
+					},
+					audio : false
+				}, successFunc, errorFunc);
+			} else if (navigator.webkitGetUserMedia) { // WebKit 核心的API
+				navigator.webkitGetUserMedia({
+					video : {
+						'optional' : [ {
+							'sourceId' : exArray[0]
+						//0为前置摄像头，1为后置  
+						} ]
+					},
+					audio : false
+				}, successFunc, errorFunc);
+			} else {
+				alert('Native device media streaming (getUserMedia) not supported in your browser.');
+			}
+		}
+
+		var localStream;
+		function successFunc(stream) {
+			video.src = window.URL && window.URL.createObjectURL(stream) || stream;
+			//video.src = URL.createObjectURL(stream);
+			//video.src = stream;
+			video.play();
+			
+			localStream = stream;
+			drawVideoAtCanvas(video, context);
+		}
+
+		function errorFunc(error) {
+			alert('Error:' + error.name);
+		}
+
+		var timeID;
+		function closeWebCam() {
+			if (video) {
+				video.pause();
+				video.src = '';
+				video.load();
+			}
+
+			if (localStream && localStream.stop) {
+				localStream.stop();
+			}
+			stream = null;
+		//	clearInterval(timeID);
+		}
+		
+		var imageData, pixels, detector, markers;
+		
+		function drawVideoAtCanvas(video, context) {
+			pixels = [];
+		    detector = new AR.Detector();
+			requestAnimationFrame(imageProcessing);
+			 /*
+			timeID = window.setInterval(function() {
+				if (video.readyState === video.HAVE_ENOUGH_DATA){
+					context.drawImage(video, 0, 0, canvas.width, canvas.height);
+					imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+					tick();
+				}
+			}, 100);*/
+		}
+
+		function imageProcessing() {
+			requestAnimationFrame(imageProcessing);
+			if (video.readyState === video.HAVE_ENOUGH_DATA){
+				context.drawImage(video, 0, 0, canvas.width, canvas.height);
+				imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+				markers = detector.detect(imageData);
+					drawCorners(markers);
+			}
+		//	snapshot();
+			
+		}
+
+		function drawCorners(markers) {
+			var corners, corner, i, j;
+			context.lineWidth = 3;
+
+			for (i = 0; i !== markers.length; ++i) {
+				corners = markers[i].corners;
+
+				context.strokeStyle = "red";
+				context.beginPath();
+
+				for (j = 0; j !== corners.length; ++j) {
+					corner = corners[j];
+					context.moveTo(corner.x, corner.y);
+					corner = corners[(j + 1) % corners.length];
+					context.lineTo(corner.x, corner.y);
+				}
+
+				context.stroke();
+				context.closePath();
+
+				context.strokeStyle = "green";
+				context.strokeRect(corners[0].x - 2, corners[0].y - 2, 4, 4);
+			}
+		}
+	//	openWebCam();
+	</script>
+
+	
+<!-- <div id="Stats-output"></div>-->
+<!-- Div which will hold the Output -->
+<div id="WebGL-output" class="div-b">
+</div>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script type="text/javascript">
+    // once everything is loaded, we run our Three.js stuff.
+    function init() {
+     //   var stats = initStats();
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        var scene = new THREE.Scene();
+        // create a camera, which defines where we're looking at.
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        // create a render and set the size
+        var webGLRenderer = new THREE.WebGLRenderer({antialias:true,       //是否开启反锯齿  
+			precision:"highp",    //着色精度选择  
+			alpha:true,           //是否可以设置背景色透明  
+			premultipliedAlpha:false,  
+			stencil:false,  
+			preserveDrawingBuffer:true, //是否保存绘图缓冲  
+			maxLights:1           //maxLights:最大灯光数  
+		}); 
+       // webGLRenderer.setClearColor(new THREE.Color(0x000, 1.0));
+		webGLRenderer.setClearColor(0xFFFFFF, 0);
+       //webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+	    webGLRenderer.setSize(320, 480);
+        webGLRenderer.shadowMapEnabled = true;
+        // position and point the camera to the center of the scene
+        camera.position.x = 150;
+        camera.position.y = 150;
+        camera.position.z = 150;
+        camera.lookAt(new THREE.Vector3(0, 40, 0));
+        // add spotlight for the shadows
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(150, 150, 150);
+        scene.add(spotLight);
+        // add the output of the renderer to the html element
+        document.getElementById("WebGL-output").appendChild(webGLRenderer.domElement);
+        // call the render function
+        var step = 0;
+        // setup the control gui
+     //   var controls = new function () {
+            // we need the first child, since it's a multimaterial
+     //   };
+        var group;
+     //   var gui = new dat.GUI();
+        // model from http://www.thingiverse.com/thing:69709
+        var loader = new THREE.STLLoader();
+        var group = new THREE.Object3D();
+        loader.load("./assets/bmw.stl", function (geometry) {
+            console.log(geometry);
+            var mat = new THREE.MeshLambertMaterial({color: 0x7777ff});
+            group = new THREE.Mesh(geometry, mat);
+            group.rotation.x = -0.5 * Math.PI;
+            group.scale.set(0.6, 0.6, 0.6);
+            scene.add(group);
+        });
+        render();
+        function render() {
+         //   stats.update();
+            if (group) {
+                group.rotation.z += 0.006;
+                // group.rotation.x+=0.006;
+            }
+            // render using requestAnimationFrame
+            requestAnimationFrame(render);
+            webGLRenderer.render(scene, camera);
+        }
+      /*  function initStats() {
+            var stats = new Stats();
+            stats.setMode(0); // 0: fps, 1: ms
+            // Align top-left
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+            document.getElementById("Stats-output").appendChild(stats.domElement);
+            return stats;
+        }*/
+    }
+//    window.onload = init;
+</script>
+</body>
+</html>
