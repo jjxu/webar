@@ -8,8 +8,8 @@
 	<script type="text/javascript" src="./js-aruco/aruco.js"></script>
 	<script type="text/javascript" src="./three/three.min.js"></script>
 	<script type="text/javascript" src="./three/STLLoader.js"></script>
-    <script type="text/javascript" src="./three/stats.js"></script>
-    <script type="text/javascript" src="./three/dat.gui.js"></script>
+    <script type="text/javascript" src="./libs/stats.js"></script>
+    <script type="text/javascript" src="./libs/dat.gui.js"></script>
 	<script type="text/javascript" src="./jsfeat/jsfeat-min.js"></script>
 <!--    <script type="text/javascript" src="./libs/jquery-1.11.2.min.js"></script> -->
 <style>
@@ -23,9 +23,9 @@
 	<div class="div-screen">
 		<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video>
 	</div>
-	<div class="div-screen">
+<!--	<div class="div-screen">
 		<canvas id="bufcan" style="display:none"></canvas>
-	</div>
+	</div> -->
 	<div class="div-screen">
 		<canvas id="canvas" style="display:block"></canvas>
 	</div>
@@ -36,10 +36,10 @@
 		var size = width * height;
 		console.log("size:" + width + "*" + height);
 		var webcam = document.getElementById('webcam');
-		var bufcan = document.getElementById('bufcan');
-		var bufctx = bufcan.getContext('2d');
-		bufcan.width = width;
-		bufcan.height = height;
+	//	var bufcan = document.getElementById('bufcan');
+	//	var bufctx = bufcan.getContext('2d');
+	//	bufcan.width = width;
+	//	bufcan.height = height;
 		//bufcan.style.width = winW + 'px';
 		//bufcan.style.height = winH + 'px';
 		
@@ -132,24 +132,29 @@
 		}
 		
 		function imageProcessing() {
+			var last = new Date();
 			requestAnimationFrame(imageProcessing);
 			if (webcam.readyState === webcam.HAVE_ENOUGH_DATA){
-				bufctx.drawImage(webcam, 0, 0, width, height);
-				var imageData = bufctx.getImageData(0, 0, width, height);
+				context.drawImage(webcam, 0, 0, width, height);
+				var imageData = context.getImageData(0, 0, width, height);
 				
 				jsfeat.imgproc.grayscale(imageData.data, width, height, grayImg);
 				//drawGrayImage(imageData, grayImg);
 
 				var corners = [];
 				var count = detectKeypoints(grayImg, corners, 100);
-				console.log("keypoint size:" + count);
+				//console.log("keypoint size:" + count);
 				drawKeypoints(corners, count);
 
 				var cols = 32; // 32 Bytes / 256 BIT descriptor
 				var rows = count; // descriptors stored per row
 				var descriptors = new jsfeat.matrix_t(cols, rows, jsfeat.U8_t | jsfeat.C1_t);
 				jsfeat.orb.describe(grayImg, corners, count, descriptors)
-							}
+			}
+			var now = new Date();
+			var fps = 1000.0 / (now.getTime() - last.getTime());
+			//console.log("FPS:" + fps);
+			context.fillText("FPS:" + fps, 20, 20);
 		//	snapshot();
 		}
 
