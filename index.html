@@ -153,7 +153,7 @@
 				
 				var count = detectKeypoints(grayImg, corners, 100);
 				//console.log("keypoint size:" + count);
-				drawKeypoints(corners, count);
+		//		drawKeypoints(corners, count);
 
 			//	var cols = 32; // 32 Bytes / 256 BIT descriptor
 			//	var rows = count; // descriptors stored per row
@@ -180,10 +180,7 @@
             context.putImageData(imageData, 0, 0);
 		}
 
-		function detectKeypoints(image, corners, maxAllowed) {
-			//detect features
-
-			//var threshold = 10;
+		function detectKeypoints(image, corners, maxAllowed) {//var threshold = 10;
 			//var border = 3;
 			jsfeat.fast_corners.set_threshold(10);
 			var count = jsfeat.fast_corners.detect(image, corners, 3);
