@@ -100,15 +100,21 @@
 			}
 		}
 
-		var localStream, grayImg;
+		var localStream, grayImg, blurImg;
+		var corners = [];
 		function successFunc(stream) {
 			webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
 			//video.src = URL.createObjectURL(stream);
 			//video.src = stream;
 			webcam.play();
 			localStream = stream;
-			grayImg = new jsfeat.matrix_t(width, height, jsfeat.U8_t | jsfeat.C1_t);
 
+			grayImg = new jsfeat.matrix_t(width, height, jsfeat.U8_t | jsfeat.C1_t);
+			blurImg = new jsfeat.matrix_t(width, height, jsfeat.U8_t | jsfeat.C1_t);
+			// you should use preallocated keypoint_t array
+			for (var i = 0; i < size; i++) {
+			    corners[i] = new jsfeat.keypoint_t(0, 0, 0, 0);
+			}
 		//	context.fillStyle = "green";
 		//	context.fillRect(0, 0, 150, 150);
 			requestAnimationFrame(imageProcessing);
@@ -131,30 +137,34 @@
 			stream = null;
 		}
 		
+		var imageData;
 		function imageProcessing() {
 			var last = new Date();
 			requestAnimationFrame(imageProcessing);
 			if (webcam.readyState === webcam.HAVE_ENOUGH_DATA){
 				context.drawImage(webcam, 0, 0, width, height);
-				var imageData = context.getImageData(0, 0, width, height);
-				
-				jsfeat.imgproc.grayscale(imageData.data, width, height, grayImg);
-				//drawGrayImage(imageData, grayImg);
+				imageData = context.getImageData(0, 0, width, height);
+				context.clearRect(0, 0, width, height);
 
-				var corners = [];
+				jsfeat.imgproc.grayscale(imageData.data, width, height, grayImg);
+				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
+				//drawGrayImage(imageData, grayImg);
+				
+				
 				var count = detectKeypoints(grayImg, corners, 100);
 				//console.log("keypoint size:" + count);
 				drawKeypoints(corners, count);
 
-				var cols = 32; // 32 Bytes / 256 BIT descriptor
-				var rows = count; // descriptors stored per row
-				var descriptors = new jsfeat.matrix_t(cols, rows, jsfeat.U8_t | jsfeat.C1_t);
-				jsfeat.orb.describe(grayImg, corners, count, descriptors)
+			//	var cols = 32; // 32 Bytes / 256 BIT descriptor
+			//	var rows = count; // descriptors stored per row
+				var descriptors = new jsfeat.matrix_t(32, count, jsfeat.U8_t | jsfeat.C1_t);
+				jsfeat.orb.describe(grayImg, corners, count, descriptors);
 			}
 			var now = new Date();
 			var fps = 1000.0 / (now.getTime() - last.getTime());
+			var tmp = "FPS:" + fps;
 			//console.log("FPS:" + fps);
-			context.fillText("FPS:" + fps, 20, 20);
+			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2), 20, 20);
 		//	snapshot();
 		}
 
@@ -171,16 +181,12 @@
 		}
 
 		function detectKeypoints(image, corners, maxAllowed) {
-			var threshold = 10;
-			jsfeat.fast_corners.set_threshold(threshold);
-			var border = 3;
-			// you should use preallocated keypoint_t array
-			for (var i = 0; i < size; i++) {
-			    corners[i] = new jsfeat.keypoint_t(0, 0, 0, 0);
-			}
-
 			//detect features
-			var count = jsfeat.fast_corners.detect(image, corners, border);
+
+			//var threshold = 10;
+			//var border = 3;
+			jsfeat.fast_corners.set_threshold(10);
+			var count = jsfeat.fast_corners.detect(image, corners, 3);
 			//var count = jsfeat.yape06.detect(image, corners, 17);
 
             // sort by score and reduce the count if needed
@@ -198,7 +204,6 @@
         }
 
         function drawKeypoints(corners, count) {
-        	context.clearRect(0, 0, width, height);
         	context.fillStyle = "green";
         	for (var i = 0; i < count; i++) {
 			    context.fillRect(corners[i].x, corners[i].y, 4, 4);
