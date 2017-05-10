@@ -59,18 +59,20 @@
 		window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
 		var exArray = []; //存储设备源ID
 		//MediaStreamTrack.getSources(function(sourceInfos) {
-		navigator.mediaDevices.enumerateDevices().then(function(sourceInfos) {
-			for (var i = 0; i != sourceInfos.length; i++) {
-				var sourceInfo = sourceInfos[i];
+		navigator.mediaDevices.enumerateDevices().then(function(devices) {
+
+			for (var i = 0; i < devices.length; i++) {
+				var device = devices[i];
+				//console.log("--------" + device.deviceId);
 				//这里会遍历audio,video，所以要加以区分  
 				/*
-				if(sourceInfo.kind == "video" && sourceInfo.facing == "environment") {
+				if(device.kind == "video" && device.facing == "environment") {
 					constraints.video = {
-						optional: [{sourceId: sourceInfo.id}]
+						optional: [{sourceId: device.id}]
 					}
 				}*/
-				if (sourceInfo.kind === 'video') {
-					exArray.push(sourceInfo.id);
+				if (device.kind === 'videoinput') {
+					exArray.push(device.deviceId);
 				}
 			}
 		});
@@ -79,19 +81,18 @@
 			if (navigator.getUserMedia) { // 标准的API
 				navigator.getUserMedia({
 					video : {
+						deviceId : { exact: exArray[1]  } 
 						//width: 300, height: 150,
-						'optional' : [ {
-							'sourceId' : exArray[0] //0为前置摄像头，1为后置  
-						} ]
+						/*'optional' : [ {
+							'deviceId' : exArray[1] //0为前置摄像头，1为后置  
+						} ]*/
 					},
 					audio : false
 				}, successFunc, errorFunc);
 			} else if (navigator.webkitGetUserMedia) { // WebKit 核心的API
 				navigator.webkitGetUserMedia({
 					video : {
-						'optional' : [ {
-							'sourceId' : exArray[0] //0为前置摄像头，1为后置  
-						} ]
+						deviceId : { exact: exArray[1]  } 
 					},
 					audio : false
 				}, successFunc, errorFunc);
@@ -102,6 +103,26 @@
 
 		var localStream, grayImg, blurImg;
 		var corners = [];
+		var matches = [];
+		var ptnCorners = [];
+		var homo3x3, match_mask;
+
+		// our point match structure
+        var match_t = (function () {
+            function match_t(screen_idx, pattern_lev, pattern_idx, distance) {
+                if (typeof screen_idx === "undefined") { screen_idx=0; }
+                if (typeof pattern_lev === "undefined") { pattern_lev=0; }
+                if (typeof pattern_idx === "undefined") { pattern_idx=0; }
+                if (typeof distance === "undefined") { distance=0; }
+
+                this.screen_idx = screen_idx;
+                this.pattern_lev = pattern_lev;
+                this.pattern_idx = pattern_idx;
+                this.distance = distance;
+            }
+            return match_t;
+        })();
+
 		function successFunc(stream) {
 			webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
 			//video.src = URL.createObjectURL(stream);
@@ -114,7 +135,10 @@
 			// you should use preallocated keypoint_t array
 			for (var i = 0; i < size; i++) {
 			    corners[i] = new jsfeat.keypoint_t(0, 0, 0, 0);
+			    matches[i] = new match_t();
 			}
+			homo3x3 = new jsfeat.matrix_t(3,3,jsfeat.F32C1_t);
+			match_mask = new jsfeat.matrix_t(500,1,jsfeat.U8C1_t);
 		//	context.fillStyle = "green";
 		//	context.fillRect(0, 0, 150, 150);
 			requestAnimationFrame(imageProcessing);
@@ -138,6 +162,7 @@
 		}
 		
 		var imageData;
+		var ptnDescs, scnDescs;
 		function imageProcessing() {
 			var last = new Date();
 			requestAnimationFrame(imageProcessing);
@@ -153,18 +178,25 @@
 				
 				var count = detectKeypoints(grayImg, corners, 100);
 				//console.log("keypoint size:" + count);
-		//		drawKeypoints(corners, count);
+			//	drawKeypoints(corners, count);
 
 			//	var cols = 32; // 32 Bytes / 256 BIT descriptor
 			//	var rows = count; // descriptors stored per row
-				var descriptors = new jsfeat.matrix_t(32, count, jsfeat.U8_t | jsfeat.C1_t);
-				jsfeat.orb.describe(grayImg, corners, count, descriptors);
+				scnDescs = new jsfeat.matrix_t(32, count, jsfeat.U8_t | jsfeat.C1_t);
+				jsfeat.orb.describe(grayImg, corners, count, scnDescs);
+				var candMatches = matchPattern(ptnDescs, scnDescs);
+				var goodMatches = findTransform(matches, candMatches);
+			//	console.log("candidate matches:" + candMatches  + "\tgood matches:" + goodMatches);
+				if (goodMatches >= 8)  {
+					drawPattern();
+				}
+				var now = new Date();
+				var fps = 1000.0 / (now.getTime() - last.getTime());
+				var tmp = "FPS:" + fps;
+				//console.log("FPS:" + fps);
+				context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  CMS:" + candMatches + " GMS:" + goodMatches, 20, 20);
 			}
-			var now = new Date();
-			var fps = 1000.0 / (now.getTime() - last.getTime());
-			var tmp = "FPS:" + fps;
-			//console.log("FPS:" + fps);
-			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2), 20, 20);
+			
 		//	snapshot();
 		}
 
@@ -206,11 +238,201 @@
 			    context.fillRect(corners[i].x, corners[i].y, 4, 4);
 			}
         }
+		
+		function initPattern() {
+			var patternImg = new Image();
+			patternImg.src = "./imgs/hb.jpg";
+			if (patternImg.complete) {
+				loadPattern(patternImg);
+			} else {
+				patternImg.onload = function() {
+					loadPattern(patternImg);
+				}
+			}
+		}
+
+		var ptnWidth, ptnHeight;
+		
+		function loadPattern(patternImg) {
+			ptnWidth = patternImg.width;
+			ptnHeight = patternImg.height;
+			context.drawImage(patternImg, 0, 0, ptnWidth, ptnHeight);
+			var ptnImgData = context.getImageData(0, 0, ptnWidth, ptnHeight);
+			var ptnGrayImg = new jsfeat.matrix_t(ptnWidth, ptnHeight, jsfeat.U8_t | jsfeat.C1_t);
+			jsfeat.imgproc.grayscale(ptnImgData.data, ptnWidth, ptnHeight, ptnGrayImg);
+			//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
+			//drawGrayImage(ptnImgData, ptnGrayImg);	
+			
+			for (var i = 0; i < ptnWidth * ptnHeight; i++) {
+			    ptnCorners[i] = new jsfeat.keypoint_t(0, 0, 0, 0);
+			}
+			var count = detectKeypoints(ptnGrayImg, ptnCorners, 100);
+			//console.log("keypoint size:" + count);
+			drawKeypoints(ptnCorners, count);
+			ptnDescs = new jsfeat.matrix_t(32, count, jsfeat.U8_t | jsfeat.C1_t);
+			jsfeat.orb.describe(ptnGrayImg, ptnCorners, count, ptnDescs);
+
+			openWebCam();
+		}
+
+		// non zero bits count
+		function popcnt32(n) {
+			n -= ((n >> 1) & 0x55555555);
+			n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+			return (((n + (n >> 4))& 0xF0F0F0F)* 0x1010101) >> 24;
+        }
+
+        // naive brute-force matching. each on screen point is 
+        // compared to all pattern points to find the closest match
+       	function matchPattern(ptnDescs, scnDescs) {
+       		//console.log("SCENE:" + scnDescs.rows + "PATTERN:" + ptnDescs.rows);
+       		var q_cnt = scnDescs.rows;
+       		var query_du8 = scnDescs.data;
+       		var query_u32 = scnDescs.buffer.i32; // cast to integer buffer
+       		var qd_off = 0;
+       		var qidx=0,lev=0,pidx=0,k=0;
+       		var num_matches = 0;
+
+            for (qidx = 0; qidx < q_cnt; qidx++) {
+            	var best_dist = 256;
+            	var best_dist2 = 256;
+            	var best_idx = -1;
+            //    var best_lev = -1;
+
+        //        for(lev = 0; lev < num_train_levels; lev++) {
+        //        	var lev_descr = ptnDescs[i];
+                	var ld_cnt = ptnDescs.rows;
+                	var ld_i32 = ptnDescs.buffer.i32; // cast to integer buffer
+                	var ld_off = 0;
+
+                    for(pidx = 0; pidx < ld_cnt; pidx++) {
+                    	var curr_d = 0;
+                        // our descriptor is 32 bytes so we have 8 Integers
+                        for(k=0; k < 8; ++k) {
+                        	curr_d += popcnt32( query_u32[qd_off+k]^ld_i32[ld_off+k] );
+                        }
+
+                        if(curr_d < best_dist) {
+                        	best_dist2 = best_dist;
+                        	best_dist = curr_d;
+                    //    	best_lev = lev; 
+                        	best_idx = pidx;
+                        } else if(curr_d < best_dist2) {
+                            best_dist2 = curr_d;
+                        }
+
+                        ld_off += 8; // next descriptor
+                    }
+            //    }
+
+                // filter out by some threshold\
+               // var match_threshold = 48;
+                /*if(best_dist < 48) {
+                    matches[num_matches].screen_idx = qidx;
+                //    matches[num_matches].pattern_lev = best_lev;
+                    matches[num_matches].pattern_idx = best_idx;
+                    num_matches++;
+                }*/
+                // filter using the ratio between 2 closest matches
+                if(best_dist < 0.6*best_dist2) {
+                    matches[num_matches].screen_idx = qidx;
+                //    matches[num_matches].pattern_lev = best_lev;
+                    matches[num_matches].pattern_idx = best_idx;
+                    num_matches++;
+                }
+
+                qd_off += 8; // next query descriptor
+            }
+            return num_matches;
+        }
+
+    	// estimate homography transform between matched points
+        function findTransform(matches, count) {
+            // motion kernel
+            var mm_kernel = new jsfeat.motion_model.homography2d();
+            // ransac params
+            //var num_model_points = 4;
+            //var reproj_threshold = 3;
+            var ransac_param = new jsfeat.ransac_params_t(4, 3, 0.5, 0.99);
+
+            var pattern_xy = [];
+            var screen_xy = [];
+
+            // construct correspondences
+            for(var i = 0; i < count; ++i) {
+                var m = matches[i];
+                var s_kp = corners[m.screen_idx];
+                var p_kp = ptnCorners[m.pattern_idx];
+                pattern_xy[i] = {"x":p_kp.x, "y":p_kp.y};
+                screen_xy[i] =  {"x":s_kp.x, "y":s_kp.y};
+            }
+
+            // estimate motion
+            var ok = false;
+            ok = jsfeat.motion_estimator.ransac(ransac_param, mm_kernel,
+                	pattern_xy, screen_xy, count, homo3x3, match_mask, 1000);
+
+            // extract good matches and re-estimate
+            var good_cnt = 0;
+            if(ok) {
+            	for(var i=0; i < count; ++i) {
+                    if(match_mask.data[i]) {
+                        pattern_xy[good_cnt].x = pattern_xy[i].x;
+                        pattern_xy[good_cnt].y = pattern_xy[i].y;
+                        screen_xy[good_cnt].x = screen_xy[i].x;
+                        screen_xy[good_cnt].y = screen_xy[i].y;
+                        good_cnt++;
+                    }
+                }
+
+                // run kernel directly with inliers only
+                mm_kernel.run(pattern_xy, screen_xy, homo3x3, good_cnt);
+            } else {
+                jsfeat.matmath.identity_3x3(homo3x3, 1.0);
+            }
+
+            return good_cnt;
+        }
+
+        function drawPattern() {
+                // get the projected pattern corners
+                var shape_pts = tCorners(homo3x3.data, ptnWidth, ptnHeight);
+
+                context.strokeStyle = "rgb(0,255,0)";
+                context.beginPath();
+
+                context.moveTo(shape_pts[0].x, shape_pts[0].y);
+                context.lineTo(shape_pts[1].x, shape_pts[1].y);
+                context.lineTo(shape_pts[2].x, shape_pts[2].y);
+                context.lineTo(shape_pts[3].x, shape_pts[3].y);
+                context.lineTo(shape_pts[0].x, shape_pts[0].y);
+
+                context.lineWidth=4;
+                context.stroke();
+            }
+
+
+        // project/transform rectangle corners with 3x3 Matrix
+        function tCorners(M, w, h) {
+            var pt = [ {'x':0,'y':0}, {'x':w,'y':0}, {'x':w,'y':h}, {'x':0,'y':h} ];
+            var z=0.0, i=0, px=0.0, py=0.0;
+
+            for (; i < 4; ++i) {
+            	px = M[0]*pt[i].x + M[1]*pt[i].y + M[2];
+            	py = M[3]*pt[i].x + M[4]*pt[i].y + M[5];
+            	z = M[6]*pt[i].x + M[7]*pt[i].y + M[8];
+            	pt[i].x = px/z;
+            	pt[i].y = py/z;
+            }
+            return pt;
+        }
+
+
 
 	//	$(function() { 
 	//		alert("xxx");
 	//	});
-		window.onload = openWebCam();
+		window.onload = initPattern();
 		window.unload = closeWebCam();
 	</script>
 </body>
