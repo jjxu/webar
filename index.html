@@ -11,31 +11,37 @@
     <script type="text/javascript" src="./libs/stats.js"></script>
     <script type="text/javascript" src="./libs/dat.gui.js"></script>
 	<script type="text/javascript" src="./jsfeat/jsfeat-min.js"></script>
+	<script type="text/javascript" src="./js/track.js"></script>
 <!--    <script type="text/javascript" src="./libs/jquery-1.11.2.min.js"></script> -->
 <style>
 	.div-relative{position:relative; color:#000; border:1px solid #000; width:100%; height:100%}    
-	.div-screen{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:100%}    
-	.div-b{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:80%} 
+	.div-screen{ position:relative; left:0px; top:0px; padding-bottom:75%;  background-color:transparent; width:100%; height:100%}
+	.div-screen video{ position:absolute; left:0px; top:0px; width:100%; height:100%}
+	.div-canvas{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:100%} 
 	body{margin: 0; overflow: hidden;}
 </style>
 </head>
 <body>
 	<div class="div-screen">
-		<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video>
+		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
+		<video id="webcam" autoplay style="width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
 <!--	<div class="div-screen">
 		<canvas id="bufcan" style="display:none"></canvas>
 	</div> -->
-	<div class="div-screen">
+	<div class="div-canvas">
 		<canvas id="canvas" style="display:block"></canvas>
 	</div>
 
 	<script type="text/javascript">
 		var width = window.innerWidth;
-		var height = window.innerHeight;
+		//var height = window.innerHeight;
+		var height = width / 3 * 4;
 		var size = width * height;
 		console.log("size:" + width + "*" + height);
 		var webcam = document.getElementById('webcam');
+		webcam.style.width = width + "px";
+		webcam.style.height = height + "px";
 	//	var bufcan = document.getElementById('bufcan');
 	//	var bufctx = bufcan.getContext('2d');
 	//	bufcan.width = width;
@@ -47,6 +53,9 @@
 		var context = canvas.getContext('2d');
 		canvas.width = width;
 		canvas.height = height;
+		context.fillStyle = "green";
+		context.strokeStyle = "rgb(0,255,0)";
+        context.lineWidth = 4;
 		
 		//alert(width + ":" + height);
 		
@@ -82,7 +91,7 @@
 				navigator.getUserMedia({
 					video : {
 						deviceId : { exact: exArray[1]  } 
-						//width: 300, height: 150,
+						//width: 360, height: 640,
 						/*'optional' : [ {
 							'deviceId' : exArray[1] //0为前置摄像头，1为后置  
 						} ]*/
@@ -137,8 +146,8 @@
 			    corners[i] = new jsfeat.keypoint_t(0, 0, 0, 0);
 			    matches[i] = new match_t();
 			}
-			homo3x3 = new jsfeat.matrix_t(3,3,jsfeat.F32C1_t);
-			match_mask = new jsfeat.matrix_t(500,1,jsfeat.U8C1_t);
+			homo3x3 = new jsfeat.matrix_t(3, 3, jsfeat.F32C1_t);
+			match_mask = new jsfeat.matrix_t(500, 1, jsfeat.U8C1_t);
 		//	context.fillStyle = "green";
 		//	context.fillRect(0, 0, 150, 150);
 			requestAnimationFrame(imageProcessing);
@@ -161,22 +170,36 @@
 			stream = null;
 		}
 		
-		var imageData;
+		var imageData, lastTime;
 		var ptnDescs, scnDescs;
+		var isTracking = false;
 		function imageProcessing() {
-			var last = new Date();
+			lastTime = new Date();
 			requestAnimationFrame(imageProcessing);
-			if (webcam.readyState === webcam.HAVE_ENOUGH_DATA){
+			if (webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				context.drawImage(webcam, 0, 0, width, height);
 				imageData = context.getImageData(0, 0, width, height);
 				context.clearRect(0, 0, width, height);
-
-				jsfeat.imgproc.grayscale(imageData.data, width, height, grayImg);
+				
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
-				
-				
-				var count = detectKeypoints(grayImg, corners, 100);
+				if (isTracking) {
+					var tps = tracking(imageData.data, context);
+					if (tps >= 8) {
+						//jsfeat.matmath.multiply_3x3(homo3x3, homo3x3, track3x3);
+						if (drawPattern(track3x3)) {
+							drawStatus(0, tps);
+							return;
+						} else {
+							isTracking = false;
+						}
+					} else {
+						isTracking = false;
+					}
+				}
+
+				jsfeat.imgproc.grayscale(imageData.data, width, height, grayImg);
+				var count = detectKeypoints(grayImg, corners, 120);
 				//console.log("keypoint size:" + count);
 			//	drawKeypoints(corners, count);
 
@@ -188,16 +211,24 @@
 				var goodMatches = findTransform(matches, candMatches);
 			//	console.log("candidate matches:" + candMatches  + "\tgood matches:" + goodMatches);
 				if (goodMatches >= 8)  {
-					drawPattern();
+					ptnShape = [ {'x':0,'y':0}, {'x':ptnWidth,'y':0}, {'x':ptnWidth,'y':ptnHeight}, {'x':0,'y':ptnHeight} ];
+					if (drawPattern(homo3x3)) {
+						initTrack(imageData.data, corners, width, height);
+						isTracking = true;
+					}
 				}
-				var now = new Date();
-				var fps = 1000.0 / (now.getTime() - last.getTime());
-				var tmp = "FPS:" + fps;
-				//console.log("FPS:" + fps);
-				context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  CMS:" + candMatches + " GMS:" + goodMatches, 20, 20);
+
+				drawStatus(goodMatches, 0);
 			}
 			
 		//	snapshot();
+		}
+
+		function drawStatus(mks, tps) {
+			var now = new Date();
+			var fps = 1000.0 / (now.getTime() - lastTime.getTime());
+			var tmp = "FPS:" + fps;
+			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 20, 20);
 		}
 
 		function drawGrayImage(imageData, grayImg) {
@@ -233,7 +264,6 @@
         }
 
         function drawKeypoints(corners, count) {
-        	context.fillStyle = "green";
         	for (var i = 0; i < count; i++) {
 			    context.fillRect(corners[i].x, corners[i].y, 4, 4);
 			}
@@ -252,7 +282,7 @@
 		}
 
 		var ptnWidth, ptnHeight;
-		
+		var ptnShape = [];
 		function loadPattern(patternImg) {
 			ptnWidth = patternImg.width;
 			ptnHeight = patternImg.height;
@@ -266,12 +296,13 @@
 			for (var i = 0; i < ptnWidth * ptnHeight; i++) {
 			    ptnCorners[i] = new jsfeat.keypoint_t(0, 0, 0, 0);
 			}
-			var count = detectKeypoints(ptnGrayImg, ptnCorners, 100);
+			var count = detectKeypoints(ptnGrayImg, ptnCorners, 120);
 			//console.log("keypoint size:" + count);
 			drawKeypoints(ptnCorners, count);
 			ptnDescs = new jsfeat.matrix_t(32, count, jsfeat.U8_t | jsfeat.C1_t);
 			jsfeat.orb.describe(ptnGrayImg, ptnCorners, count, ptnDescs);
 
+			
 			openWebCam();
 		}
 
@@ -347,9 +378,8 @@
         }
 
     	// estimate homography transform between matched points
+    	var mm_kernel = new jsfeat.motion_model.homography2d();
         function findTransform(matches, count) {
-            // motion kernel
-            var mm_kernel = new jsfeat.motion_model.homography2d();
             // ransac params
             //var num_model_points = 4;
             //var reproj_threshold = 3;
@@ -394,23 +424,47 @@
             return good_cnt;
         }
 
-        function drawPattern() {
-                // get the projected pattern corners
-                var shape_pts = tCorners(homo3x3.data, ptnWidth, ptnHeight);
+        function drawPattern(matrix3x3) {
+            // get the projected pattern corners
+            //var shape_pts = tCorners(homo3x3.data, ptnWidth, ptnHeight);
+            var M = matrix3x3.data;
+            var z=0.0, px=0.0, py=0.0;
 
-                context.strokeStyle = "rgb(0,255,0)";
-                context.beginPath();
-
-                context.moveTo(shape_pts[0].x, shape_pts[0].y);
-                context.lineTo(shape_pts[1].x, shape_pts[1].y);
-                context.lineTo(shape_pts[2].x, shape_pts[2].y);
-                context.lineTo(shape_pts[3].x, shape_pts[3].y);
-                context.lineTo(shape_pts[0].x, shape_pts[0].y);
-
-                context.lineWidth=4;
-                context.stroke();
+            for (var i = 0; i < 4; i++) {
+            	px = M[0]*ptnShape[i].x + M[1]*ptnShape[i].y + M[2];
+            	py = M[3]*ptnShape[i].x + M[4]*ptnShape[i].y + M[5];
+            	z = M[6]*ptnShape[i].x + M[7]*ptnShape[i].y + M[8];
+            	ptnShape[i].x = px/z;
+            	ptnShape[i].y = py/z;
             }
 
+            if (!isValidMatch(ptnShape))
+            	return false;
+
+            context.beginPath();
+            context.moveTo(ptnShape[0].x, ptnShape[0].y);
+            context.lineTo(ptnShape[1].x, ptnShape[1].y);
+            context.lineTo(ptnShape[2].x, ptnShape[2].y);
+            context.lineTo(ptnShape[3].x, ptnShape[3].y);
+            context.lineTo(ptnShape[0].x, ptnShape[0].y);
+            context.stroke();
+            return true;
+        }
+
+        function direction(pi, pj, pk) {
+			return (pi.x - pk.x) * (pi.y - pj.y) - (pi.y - pk.y) * (pi.x - pj.x);
+		}
+
+		function isValidMatch(corners) {
+			var d1 = direction(corners[1], corners[3], corners[0]);
+			var d2 = direction(corners[1], corners[3], corners[2]);
+			var d3 = direction(corners[0], corners[2], corners[1]);
+			var d4 = direction(corners[0], corners[2], corners[3]);
+			if ((d1 * d2 < 0) && (d3 * d4 < 0))
+				return true;
+			else 
+				return false;
+		}
 
         // project/transform rectangle corners with 3x3 Matrix
         function tCorners(M, w, h) {
@@ -426,8 +480,6 @@
             }
             return pt;
         }
-
-
 
 	//	$(function() { 
 	//		alert("xxx");
