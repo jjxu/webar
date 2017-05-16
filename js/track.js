@@ -1,5 +1,5 @@
 var curr_img_pyr, prev_img_pyr, prev_xy, curr_xy, point_status, point_count, track3x3;
-var TPS = 32;
+var TPS = 16;
 var prev_pt = [];
 var curr_pt = [];
 
@@ -47,9 +47,8 @@ function tracking(imageData, context) {
     jsfeat.optical_flow_lk.track(prev_img_pyr, curr_img_pyr, prev_xy, curr_xy, TPS, 20, 30, point_status, 0.01, 0.001);
 
     //prune_oflow_points
-    var j=0;
-
-    for(var i = 0; i < point_count; i++) {
+    var j = 0, i = 0;
+    for(; i < point_count; i++) {
         if(point_status[i] == 1) {
             if(j < i) {
                 curr_xy[j<<1] = curr_xy[i<<1];
@@ -63,14 +62,12 @@ function tracking(imageData, context) {
     //console.log(">>" + point_count);
 
     if (point_count >= 8) {
-        
-
-        // construct correspondences
-        for(var i = 0; i < point_count; ++i) {
-            prev_pt[i].x = prev_xy[i << 1];
-            prev_pt[i].y = prev_xy[(i << 1) + 1];
-            curr_pt[i].x = curr_xy[i << 1];
-            curr_pt[i].y = curr_xy[(i << 1) + 1];
+         // construct correspondences
+        for(i = 0, j = 0; i < (point_count << 1); i += 2, j++) {
+            prev_pt[j].x = prev_xy[i];
+            prev_pt[j].y = prev_xy[i + 1];
+            curr_pt[j].x = curr_xy[i];
+            curr_pt[j].y = curr_xy[i + 1];
             //prev_pt[i] = {'x':prev_xy[i << 1], 'y':prev_xy[(i << 1) + 1]};
             //curr_pt[i] = {'x':curr_xy[i << 1], 'y':curr_xy[(i << 1) + 1]};
         }
