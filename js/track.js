@@ -44,7 +44,7 @@ function tracking(imageData, context) {
     //var max_iterations = 30;
     //var epsilon = 0.01;
     //var min_eigen = 0.001;
-    jsfeat.optical_flow_lk.track(prev_img_pyr, curr_img_pyr, prev_xy, curr_xy, TPS, 20, 30, point_status, 0.01, 0.001);
+    jsfeat.optical_flow_lk.track(prev_img_pyr, curr_img_pyr, prev_xy, curr_xy, point_count, 10, 15, point_status, 0.01, 0.001);
 
     //prune_oflow_points
     var j = 0, i = 0;
@@ -54,7 +54,6 @@ function tracking(imageData, context) {
                 curr_xy[j<<1] = curr_xy[i<<1];
                 curr_xy[(j<<1) + 1] = curr_xy[(i<<1) + 1];
             }
-            //draw_circle(ctx, curr_xy[j<<1], curr_xy[(j<<1)+1]);
             j++;
         }
     }

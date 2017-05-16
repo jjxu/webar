@@ -174,7 +174,7 @@
 		var ptnDescs, scnDescs;
 		var isTracking = false;
 		function imageProcessing() {
-			lastTime = new Date();
+			lastTime = Date.now();
 			requestAnimationFrame(imageProcessing);
 			if (webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				context.drawImage(webcam, 0, 0, width, height);
@@ -225,8 +225,7 @@
 		}
 
 		function drawStatus(mks, tps) {
-			var now = new Date();
-			var fps = 1000.0 / (now.getTime() - lastTime.getTime());
+			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
 			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 20, 20);
 		}
