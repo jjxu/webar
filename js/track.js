@@ -1,5 +1,7 @@
 var curr_img_pyr, prev_img_pyr, prev_xy, curr_xy, point_status, point_count, track3x3;
 var TPS = 32;
+var prev_pt = [];
+var curr_pt = [];
 
 function initTrack(imageData, corners, width, height) {
     track3x3 = new jsfeat.matrix_t(3, 3, jsfeat.F32C1_t);
@@ -19,6 +21,8 @@ function initTrack(imageData, corners, width, height) {
     for (var i = 0; i < TPS; i++) {
         curr_xy[i << 1] = corners[i].x;
         curr_xy[(i << 1) + 1] = corners[i].y;
+        prev_pt[i] = {'x':0, 'y':0};
+        curr_pt[i] = {'x':0, 'y':0};
     }
     console.log("init tracking");
     return true;
@@ -56,16 +60,19 @@ function tracking(imageData, context) {
         }
     }
     point_count = j;
-    console.log(">>" + point_count);
+    //console.log(">>" + point_count);
 
     if (point_count >= 8) {
-        var prev_pt = [];
-        var curr_pt = [];
+        
 
         // construct correspondences
         for(var i = 0; i < point_count; ++i) {
-            prev_pt[i] = {"x":prev_xy[i << 1], "y":prev_xy[(i << 1) + 1]};
-            curr_pt[i] = {"x":curr_xy[i << 1], "y":curr_xy[(i << 1) + 1]};
+            prev_pt[i].x = prev_xy[i << 1];
+            prev_pt[i].y = prev_xy[(i << 1) + 1];
+            curr_pt[i].x = curr_xy[i << 1];
+            curr_pt[i].y = curr_xy[(i << 1) + 1];
+            //prev_pt[i] = {'x':prev_xy[i << 1], 'y':prev_xy[(i << 1) + 1]};
+            //curr_pt[i] = {'x':curr_xy[i << 1], 'y':curr_xy[(i << 1) + 1]};
         }
 
         homo_kernel.run(prev_pt, curr_pt, track3x3, point_count);
