@@ -55,7 +55,7 @@
 		canvas.height = height;
 		context.fillStyle = "green";
 		context.strokeStyle = "rgb(0,255,0)";
-        context.lineWidth = 4;
+        context.lineWidth = 1;
 		
 		//alert(width + ":" + height);
 		
@@ -166,10 +166,11 @@
 		var imageData, lastTime;
 		var ptnDescs, scnDescs;
 		var isTracking = false;
+		var isPatternReady = false;
 		function imageProcessing() {
 			lastTime = Date.now();
 			requestAnimationFrame(imageProcessing);
-			if (webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
+			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				context.drawImage(webcam, 0, 0, width, height);
 				imageData = context.getImageData(0, 0, width, height);
 				context.clearRect(0, 0, width, height);
@@ -294,6 +295,7 @@
 			drawKeypoints(ptnCorners, count);
 			ptnDescs = new jsfeat.matrix_t(32, count, jsfeat.U8_t | jsfeat.C1_t);
 			jsfeat.orb.describe(ptnGrayImg, ptnCorners, count, ptnDescs);
+			isPatternReady = true;
 		}
 
 		// non zero bits count
