@@ -66,31 +66,24 @@
 		}
 		
 		window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
-		var exArray = []; //存储设备源ID
+		var videoDevices = []; //存储设备源ID
 		//MediaStreamTrack.getSources(function(sourceInfos) {
 		navigator.mediaDevices.enumerateDevices().then(function(devices) {
-
 			for (var i = 0; i < devices.length; i++) {
 				var device = devices[i];
-				//console.log("--------" + device.deviceId);
-				//这里会遍历audio,video，所以要加以区分  
-				/*
-				if(device.kind == "video" && device.facing == "environment") {
-					constraints.video = {
-						optional: [{sourceId: device.id}]
-					}
-				}*/
-				if (device.kind === 'videoinput') {
-					exArray.push(device.deviceId);
+				if ((device.kind === 'videoinput') && (device.label.indexOf('back') >= 0)) {
+					videoDevices.push(device.deviceId);
+				//	videoLabels.push(device.label);
 				}
 			}
+			openWebCam();
 		});
-
+		
 		function openWebCam() {
 			if (navigator.getUserMedia) { // 标准的API
 				navigator.getUserMedia({
 					video : {
-						deviceId : { exact: exArray[1]  } 
+						deviceId : { exact: videoDevices[0]  } 
 						//width: 360, height: 640,
 						/*'optional' : [ {
 							'deviceId' : exArray[1] //0为前置摄像头，1为后置  
@@ -101,7 +94,7 @@
 			} else if (navigator.webkitGetUserMedia) { // WebKit 核心的API
 				navigator.webkitGetUserMedia({
 					video : {
-						deviceId : { exact: exArray[1]  } 
+						deviceId : { exact: videoDevices[0]  } 
 					},
 					audio : false
 				}, successFunc, errorFunc);
@@ -184,7 +177,7 @@
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
 
-				/*if (isTracking) {
+				if (isTracking) {
 					var tps = tracking(imageData.data);
 					if (tps >= 8) {
 						//jsfeat.matmath.multiply_3x3(homo3x3, homo3x3, track3x3);
@@ -197,7 +190,7 @@
 					} else {
 						isTracking = false;
 					}
-				}*/
+				}
 
 				jsfeat.imgproc.grayscale(imageData.data, width, height, grayImg);
 				var count = detectKeypoints(grayImg, corners, 120);
@@ -228,7 +221,7 @@
 		function drawStatus(mks, tps) {
 			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
-			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 20, 20);
+			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + track_count, 20, 20);
 		}
 
 		function drawGrayImage(imageData, grayImg) {
@@ -301,9 +294,6 @@
 			drawKeypoints(ptnCorners, count);
 			ptnDescs = new jsfeat.matrix_t(32, count, jsfeat.U8_t | jsfeat.C1_t);
 			jsfeat.orb.describe(ptnGrayImg, ptnCorners, count, ptnDescs);
-
-			
-			openWebCam();
 		}
 
 		// non zero bits count

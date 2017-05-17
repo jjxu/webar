@@ -2,6 +2,7 @@ var curr_img_pyr, prev_img_pyr, prev_xy, curr_xy, point_status, point_count, tra
 var TPS = 16;
 var prev_pt = [];
 var curr_pt = [];
+var track_count = 0;
 
 function initTrack(imageData, corners, width, height) {
     track3x3 = new jsfeat.matrix_t(3, 3, jsfeat.F32C1_t);
@@ -24,6 +25,7 @@ function initTrack(imageData, corners, width, height) {
         prev_pt[i] = {'x':0, 'y':0};
         curr_pt[i] = {'x':0, 'y':0};
     }
+    track_count = 0;
     console.log("init tracking");
     return true;
 }
@@ -78,6 +80,7 @@ function tracking(imageData) {
             context.fillRect(curr_pt[i].x, curr_pt[i].y, 4, 4);
         }*/
     }
+    track_count++;
     return point_count;
 }
 
