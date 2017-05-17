@@ -183,8 +183,9 @@
 				
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
-				if (isTracking) {
-					var tps = tracking(imageData.data, context);
+
+				/*if (isTracking) {
+					var tps = tracking(imageData.data);
 					if (tps >= 8) {
 						//jsfeat.matmath.multiply_3x3(homo3x3, homo3x3, track3x3);
 						if (drawPattern(track3x3)) {
@@ -196,7 +197,7 @@
 					} else {
 						isTracking = false;
 					}
-				}
+				}*/
 
 				jsfeat.imgproc.grayscale(imageData.data, width, height, grayImg);
 				var count = detectKeypoints(grayImg, corners, 120);

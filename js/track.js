@@ -29,7 +29,7 @@ function initTrack(imageData, corners, width, height) {
 }
 
 var homo_kernel = new jsfeat.motion_model.homography2d();
-function tracking(imageData, context) {
+function tracking(imageData) {
     var _pt_xy = prev_xy;
     prev_xy = curr_xy;
     curr_xy = _pt_xy;
@@ -44,7 +44,7 @@ function tracking(imageData, context) {
     //var max_iterations = 30;
     //var epsilon = 0.01;
     //var min_eigen = 0.001;
-    jsfeat.optical_flow_lk.track(prev_img_pyr, curr_img_pyr, prev_xy, curr_xy, point_count, 10, 15, point_status, 0.01, 0.001);
+    jsfeat.optical_flow_lk.track(prev_img_pyr, curr_img_pyr, prev_xy, curr_xy, point_count, 20, 30, point_status, 0.01, 0.001);
 
     //prune_oflow_points
     var j = 0, i = 0;
