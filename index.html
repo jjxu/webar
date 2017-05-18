@@ -26,9 +26,9 @@
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
 		<video id="webcam" autoplay style="width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
-<!--	<div class="div-screen">
+	<div class="div-canvas">
 		<canvas id="bufcan" style="display:none"></canvas>
-	</div> -->
+	</div>
 	<div class="div-canvas">
 		<canvas id="canvas" style="display:block"></canvas>
 	</div>
@@ -42,10 +42,11 @@
 		var webcam = document.getElementById('webcam');
 		webcam.style.width = width + "px";
 		webcam.style.height = height + "px";
-	//	var bufcan = document.getElementById('bufcan');
-	//	var bufctx = bufcan.getContext('2d');
-	//	bufcan.width = width;
-	//	bufcan.height = height;
+
+		var bufcan = document.getElementById('bufcan');
+		var bufctx = bufcan.getContext('2d');
+		bufcan.width = width;
+		bufcan.height = height;
 		//bufcan.style.width = winW + 'px';
 		//bufcan.style.height = winH + 'px';
 		
@@ -55,7 +56,7 @@
 		canvas.height = height;
 		context.fillStyle = "green";
 		context.strokeStyle = "rgb(0,255,0)";
-        context.lineWidth = 1;
+        //context.lineWidth = 1;
 		
 		//alert(width + ":" + height);
 		
@@ -171,8 +172,8 @@
 			lastTime = Date.now();
 			requestAnimationFrame(imageProcessing);
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
-				context.drawImage(webcam, 0, 0, width, height);
-				imageData = context.getImageData(0, 0, width, height);
+				bufctx.drawImage(webcam, 0, 0, width, height);
+				imageData = bufctx.getImageData(0, 0, width, height);
 				context.clearRect(0, 0, width, height);
 				
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
