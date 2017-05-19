@@ -26,9 +26,9 @@
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
 		<video id="webcam" autoplay style="width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
-<!--	<div class="div-canvas">
+	<div class="div-canvas">
 		<canvas id="bufcan" style="display:none"></canvas>
-	</div> -->
+	</div>
 	<div class="div-canvas">
 		<canvas id="canvas" style="display:block"></canvas>
 	</div>
@@ -43,10 +43,19 @@
 		webcam.style.width = width + "px";
 		webcam.style.height = height + "px";
 
-		/*var bufcan = document.getElementById('bufcan');
-		var bufctx = bufcan.getContext('2d');
+		var bufcan = document.getElementById('bufcan');
 		bufcan.width = width;
-		bufcan.height = height;*/
+		bufcan.height = height;
+		//var bufctx = bufcan.getContext('2d');
+
+		var gl = bufcan.getContext('experimental-webgl');
+		var tex = gl.createTexture();
+  		gl.bindTexture(gl.TEXTURE_2D, tex);
+  		gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer());
+  		gl.viewport(0, 0, width, height);
+ 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+ 		var imageData = new Uint8Array(width * height * 4);
+
 		//bufcan.style.width = winW + 'px';
 		//bufcan.style.height = winH + 'px';
 		
@@ -96,7 +105,7 @@
 			} else if (navigator.webkitGetUserMedia) { // WebKit 核心的API
 				navigator.webkitGetUserMedia({
 					video : {
-						deviceId : { exact: videoDevices[0]  },
+						deviceId : { exact: videoDevices[0] },
 						width : { min: width, ideal : width, max: width },
 						height : { min: height, ideal : height, max: height },
 					},
@@ -167,23 +176,31 @@
 			stream = null;
 		}
 		
-		var imageData, lastTime;
-		var ptnDescs, scnDescs;
+		//var imageData;
+		var lastTime, ptnDescs, scnDescs;
 		var isTracking = false;
 		var isPatternReady = false;
+
+		function getImageData() {
+		//	context.drawImage(webcam, 0, 0);
+		//	imageData = context.getImageData(0, 0, width, height).data;
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
+			gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
+		//	var result = typedArray;
+		}
+
 		function imageProcessing() {
 			lastTime = Date.now();
 			requestAnimationFrame(imageProcessing);
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
-				context.drawImage(webcam, 0, 0);
-				imageData = context.getImageData(0, 0, width, height);
+				getImageData();
 				context.clearRect(0, 0, width, height);
 				
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
 
 				if (isTracking) {
-					var tps = tracking(imageData.data);
+					var tps = tracking(imageData);
 					if (tps >= 8) {
 						//jsfeat.matmath.multiply_3x3(homo3x3, homo3x3, track3x3);
 						if (drawShape(track3x3)) {
@@ -197,7 +214,7 @@
 					}
 				}
 
-				jsfeat.imgproc.grayscale(imageData.data, width, height, grayImg);
+				jsfeat.imgproc.grayscale(imageData, width, height, grayImg);
 				var count = detectKeypoints(grayImg, corners, 120);
 				//console.log("keypoint size:" + count);
 			//	drawKeypoints(corners, count);
@@ -212,7 +229,7 @@
 				if (goodMatches >= 8)  {
 					ptnShape = [ {'x':0,'y':0}, {'x':ptnWidth,'y':0}, {'x':ptnWidth,'y':ptnHeight}, {'x':0,'y':ptnHeight} ];
 					if (drawShape(homo3x3)) {
-						initTrack(imageData.data, corners, width, height);
+						initTrack(imageData, corners, width, height);
 						isTracking = true;
 					}
 				}
@@ -226,11 +243,11 @@
 		function drawStatus(mks, tps) {
 			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
-			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + imageData.data[0], 20, 20);
+			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + imageData[0], 20, 20);
 		}
 
 		function drawGrayImage(imageData, grayImg) {
-			var data_u32 = new Uint32Array(imageData.data.buffer);
+			var data_u32 = new Uint32Array(imageData.buffer);
             var i = size; //grayImg.cols * grayImg.rows;
             var pix = 0;
             var alpha = (0xff << 24);
@@ -238,7 +255,7 @@
             	pix = grayImg.data[i];
             	data_u32[i] = alpha | (pix << 16) | (pix << 8) | pix;
             }
-            context.putImageData(imageData, 0, 0);
+            context.putImageData(imageData, 0, 0); //???imageData.data
 		}
 
 		function detectKeypoints(image, corners, maxAllowed) {//var threshold = 10;
