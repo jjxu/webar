@@ -27,10 +27,10 @@
 		<video id="webcam" autoplay style="width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
 	<div class="div-canvas">
-		<canvas id="bufcan" style="display:block"></canvas>
+		<canvas id="bufcan" style="display:none"></canvas>
 	</div>
 	<div class="div-canvas">
-		<canvas id="canvas" style="display:none"></canvas>
+		<canvas id="canvas" style="display:block"></canvas>
 	</div>
 
 	<script type="text/javascript">
@@ -192,9 +192,8 @@
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				getImageData();
 				context.clearRect(0, 0, width, height);
-				drawStatus(0, tps);
-				return;
-				
+				//drawStatus(0, tps);
+				//return;
 				
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
