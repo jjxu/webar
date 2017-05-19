@@ -26,9 +26,9 @@
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
 		<video id="webcam" autoplay style="width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
-	<div class="div-canvas">
+<!--	<div class="div-canvas">
 		<canvas id="bufcan" style="display:none"></canvas>
-	</div>
+	</div> -->
 	<div class="div-canvas">
 		<canvas id="canvas" style="display:block"></canvas>
 	</div>
@@ -43,10 +43,10 @@
 		webcam.style.width = width + "px";
 		webcam.style.height = height + "px";
 
-		var bufcan = document.getElementById('bufcan');
+		/*var bufcan = document.getElementById('bufcan');
 		var bufctx = bufcan.getContext('2d');
 		bufcan.width = width;
-		bufcan.height = height;
+		bufcan.height = height;*/
 		//bufcan.style.width = winW + 'px';
 		//bufcan.style.height = winH + 'px';
 		
@@ -172,8 +172,8 @@
 			lastTime = Date.now();
 			requestAnimationFrame(imageProcessing);
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
-				bufctx.drawImage(webcam, 0, 0, width, height);
-				imageData = bufctx.getImageData(0, 0, width, height);
+				context.drawImage(webcam, 0, 0, width, height);
+				imageData = context.getImageData(0, 0, width, height);
 				context.clearRect(0, 0, width, height);
 				
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
@@ -183,7 +183,7 @@
 					var tps = tracking(imageData.data);
 					if (tps >= 8) {
 						//jsfeat.matmath.multiply_3x3(homo3x3, homo3x3, track3x3);
-						if (drawPattern(track3x3)) {
+						if (drawShape(track3x3)) {
 							drawStatus(0, tps);
 							return;
 						} else {
@@ -208,7 +208,7 @@
 			//	console.log("candidate matches:" + candMatches  + "\tgood matches:" + goodMatches);
 				if (goodMatches >= 8)  {
 					ptnShape = [ {'x':0,'y':0}, {'x':ptnWidth,'y':0}, {'x':ptnWidth,'y':ptnHeight}, {'x':0,'y':ptnHeight} ];
-					if (drawPattern(homo3x3)) {
+					if (drawShape(homo3x3)) {
 						initTrack(imageData.data, corners, width, height);
 						isTracking = true;
 					}
@@ -223,7 +223,7 @@
 		function drawStatus(mks, tps) {
 			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
-			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + ptnShape[3].y, 20, 20);
+			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + track3x3.data[7], 20, 20);
 		}
 
 		function drawGrayImage(imageData, grayImg) {
@@ -417,7 +417,7 @@
             return good_cnt;
         }
 
-        function drawPattern(matrix3x3) {
+        function drawShape(matrix3x3) {
             // get the projected pattern corners
             //var shape_pts = tCorners(homo3x3.data, ptnWidth, ptnHeight);
             var M = matrix3x3.data;
