@@ -191,8 +191,10 @@
 			requestAnimationFrame(imageProcessing);
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				getImageData();
-				//return;
 				context.clearRect(0, 0, width, height);
+				drawStatus(0, tps);
+				return;
+				
 				
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
