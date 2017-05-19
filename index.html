@@ -223,7 +223,7 @@
 		function drawStatus(mks, tps) {
 			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
-			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + track_count, 20, 20);
+			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + ptnShape[3].y, 20, 20);
 		}
 
 		function drawGrayImage(imageData, grayImg) {
