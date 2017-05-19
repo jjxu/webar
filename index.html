@@ -84,8 +84,9 @@
 			if (navigator.getUserMedia) { // 标准的API
 				navigator.getUserMedia({
 					video : {
-						deviceId : { exact: videoDevices[0]  } 
-						//width: 360, height: 640,
+						deviceId : { exact: videoDevices[0]  },
+						width : { min: width, ideal : width, max: width },
+						height : { min: height, ideal : height, max: height },
 						/*'optional' : [ {
 							'deviceId' : exArray[1] //0为前置摄像头，1为后置  
 						} ]*/
@@ -95,7 +96,9 @@
 			} else if (navigator.webkitGetUserMedia) { // WebKit 核心的API
 				navigator.webkitGetUserMedia({
 					video : {
-						deviceId : { exact: videoDevices[0]  } 
+						deviceId : { exact: videoDevices[0]  },
+						width : { min: width, ideal : width, max: width },
+						height : { min: height, ideal : height, max: height },
 					},
 					audio : false
 				}, successFunc, errorFunc);
@@ -172,7 +175,7 @@
 			lastTime = Date.now();
 			requestAnimationFrame(imageProcessing);
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
-				context.drawImage(webcam, 0, 0, width, height);
+				context.drawImage(webcam, 0, 0);
 				imageData = context.getImageData(0, 0, width, height);
 				context.clearRect(0, 0, width, height);
 				

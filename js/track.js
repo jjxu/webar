@@ -25,7 +25,7 @@ function initTrack(imageData, corners, width, height) {
         prev_pt[i] = {'x':0, 'y':0};
         curr_pt[i] = {'x':0, 'y':0};
     }
-  //  track_count = 0;
+    track_count = 0;
     console.log("init tracking");
     return true;
 }
@@ -63,6 +63,7 @@ function tracking(imageData) {
     //console.log(">>" + point_count);
 
     if (point_count >= 8) {
+        track_count++;
          // construct correspondences
         for(i = 0, j = 0; i < (point_count << 1); i += 2, j++) {
             prev_pt[j].x = prev_xy[i];
@@ -80,7 +81,6 @@ function tracking(imageData) {
             context.fillRect(curr_pt[i].x, curr_pt[i].y, 4, 4);
         }*/
     }
-  //  track_count++;
     return point_count;
 }
 
