@@ -1,5 +1,5 @@
 var curr_img_pyr, prev_img_pyr, prev_xy, curr_xy, point_status, point_count, track3x3;
-var TPS = 16;
+var TPS = 18;
 var prev_pt = [];
 var curr_pt = [];
 var track_count = 0;
@@ -76,9 +76,9 @@ function tracking(imageData) {
 
         homo_kernel.run(prev_pt, curr_pt, track3x3, point_count);
         /*
-        context.fillStyle = "green";
+        arctx.fillStyle = "green";
         for (var i = 0; i < point_count; i++) {
-            context.fillRect(curr_pt[i].x, curr_pt[i].y, 4, 4);
+            arctx.fillRect(curr_pt[i].x, curr_pt[i].y, 4, 4);
         }*/
     }
     return point_count;

@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>WebAR</title>
 	<script type="text/javascript" src="./js-aruco/cv.js"></script>
-	<script type="text/javascript" src="./js-aruco/aruco.js"></script>
+	<script type="text/javascript" src="./js-aruco/posit1-patched.js"></script>
+	<script type="text/javascript" src="./js-aruco/svd.js"></script>
 	<script type="text/javascript" src="./three/three.min.js"></script>
 	<script type="text/javascript" src="./three/STLLoader.js"></script>
     <script type="text/javascript" src="./libs/stats.js"></script>
     <script type="text/javascript" src="./libs/dat.gui.js"></script>
 	<script type="text/javascript" src="./jsfeat/jsfeat-min.js"></script>
 	<script type="text/javascript" src="./js/track.js"></script>
+	<script type="text/javascript" src="./js/threed.js"></script>
 <!--    <script type="text/javascript" src="./libs/jquery-1.11.2.min.js"></script> -->
 <style>
 	.div-relative{position:relative; color:#000; border:1px solid #000; width:100%; height:100%}    
@@ -30,7 +32,9 @@
 		<canvas id="bufcan" style="display:none"></canvas>
 	</div>
 	<div class="div-canvas">
-		<canvas id="canvas" style="display:block"></canvas>
+		<canvas id="arcan" style="display:block"></canvas>
+	</div>
+	<div id="3D-canvas" class="div-canvas">
 	</div>
 
 	<script type="text/javascript">
@@ -56,14 +60,13 @@
  		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
  		var imageData = new Uint8Array(width * height * 4);
 
-		
-		var canvas = document.getElementById('canvas');
-		var context = canvas.getContext('2d');
-		canvas.width = width;
-		canvas.height = height;
-		context.fillStyle = "green";
-		context.strokeStyle = "rgb(0,255,0)";
-        //context.lineWidth = 1;
+		var arcan = document.getElementById('arcan');
+		var arctx = arcan.getContext('2d');
+		arcan.width = width;
+		arcan.height = height;
+		arctx.fillStyle = "green";
+		arctx.strokeStyle = "rgb(0,255,0)";
+        //arctx.lineWidth = 1;
 		
 		//alert(width + ":" + height);
 		
@@ -85,6 +88,7 @@
 				}
 			}
 			openWebCam();
+			initModel(width, height);
 		});
 		
 		function openWebCam() {
@@ -152,8 +156,6 @@
 			}
 			homo3x3 = new jsfeat.matrix_t(3, 3, jsfeat.F32C1_t);
 			match_mask = new jsfeat.matrix_t(500, 1, jsfeat.U8C1_t);
-		//	context.fillStyle = "green";
-		//	context.fillRect(0, 0, 150, 150);
 			requestAnimationFrame(imageProcessing);
 		}
 
@@ -167,7 +169,6 @@
 				webcam.src = '';
 			//	webcam.load();
 			}
-
 			if (localStream && localStream.stop) {
 				localStream.stop();
 			}
@@ -180,8 +181,8 @@
 		var isPatternReady = false;
 		//var imageData;
 		function getImageData() {
-		//	context.drawImage(webcam, 0, 0);
-		//	imageData = context.getImageData(0, 0, width, height).data;
+		//	arctx.drawImage(webcam, 0, 0);
+		//	imageData = arctx.getImageData(0, 0, width, height).data;
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
 			gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
 		}
@@ -191,7 +192,7 @@
 			requestAnimationFrame(imageProcessing);
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				getImageData();
-				context.clearRect(0, 0, width, height);
+				arctx.clearRect(0, 0, width, height);
 				//drawStatus(0, tps);
 				//return;
 				
@@ -230,6 +231,7 @@
 					if (drawShape(homo3x3)) {
 						initTrack(imageData, corners, width, height);
 						isTracking = true;
+						canvas3d.style.display = "block";
 					}
 				}
 
@@ -240,9 +242,10 @@
 		}
 
 		function drawStatus(mks, tps) {
+			drawModel(ptnShape);
 			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
-			context.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + imageData[0], 20, 20);
+			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps + "-" + imageData[0], 20, 20);
 		}
 
 		function drawGrayImage(imageData, grayImg) {
@@ -254,7 +257,7 @@
             	pix = grayImg.data[i];
             	data_u32[i] = alpha | (pix << 16) | (pix << 8) | pix;
             }
-            context.putImageData(imageData, 0, 0); //???imageData.data
+            arctx.putImageData(imageData, 0, 0); //???imageData.data
 		}
 
 		function detectKeypoints(image, corners, maxAllowed) {//var threshold = 10;
@@ -279,7 +282,7 @@
 
         function drawKeypoints(corners, count) {
         	for (var i = 0; i < count; i++) {
-			    context.fillRect(corners[i].x, corners[i].y, 4, 4);
+			    arctx.fillRect(corners[i].x, corners[i].y, 4, 4);
 			}
         }
 		
@@ -300,8 +303,8 @@
 		function loadPattern(patternImg) {
 			ptnWidth = patternImg.width;
 			ptnHeight = patternImg.height;
-			context.drawImage(patternImg, 0, 0, ptnWidth, ptnHeight);
-			var ptnImgData = context.getImageData(0, 0, ptnWidth, ptnHeight);
+			arctx.drawImage(patternImg, 0, 0, ptnWidth, ptnHeight);
+			var ptnImgData = arctx.getImageData(0, 0, ptnWidth, ptnHeight);
 			var ptnGrayImg = new jsfeat.matrix_t(ptnWidth, ptnHeight, jsfeat.U8_t | jsfeat.C1_t);
 			jsfeat.imgproc.grayscale(ptnImgData.data, ptnWidth, ptnHeight, ptnGrayImg);
 			//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
@@ -453,13 +456,13 @@
             if (!isValidMatch(ptnShape))
             	return false;
 
-            context.beginPath();
-            context.moveTo(ptnShape[0].x, ptnShape[0].y);
-            context.lineTo(ptnShape[1].x, ptnShape[1].y);
-            context.lineTo(ptnShape[2].x, ptnShape[2].y);
-            context.lineTo(ptnShape[3].x, ptnShape[3].y);
-            context.lineTo(ptnShape[0].x, ptnShape[0].y);
-            context.stroke();
+            arctx.beginPath();
+            arctx.moveTo(ptnShape[0].x, ptnShape[0].y);
+            arctx.lineTo(ptnShape[1].x, ptnShape[1].y);
+            arctx.lineTo(ptnShape[2].x, ptnShape[2].y);
+            arctx.lineTo(ptnShape[3].x, ptnShape[3].y);
+            arctx.lineTo(ptnShape[0].x, ptnShape[0].y);
+            arctx.stroke();
             return true;
         }
 
