@@ -1,5 +1,5 @@
 var curr_img_pyr, prev_img_pyr, prev_xy, curr_xy, point_status, point_count, track3x3;
-var TPS = 18;
+var TPS = 16;
 var prev_pt = [];
 var curr_pt = [];
 var track_count = 0;
@@ -15,23 +15,41 @@ function initTrack(imageData, corners, width, height) {
     jsfeat.imgproc.grayscale(imageData, width, height, curr_img_pyr.data[0]);
     curr_img_pyr.build(curr_img_pyr.data[0], true);
 
-    point_count = TPS;
     point_status = new Uint8Array(TPS);
     prev_xy = new Float32Array(TPS * 2);
     curr_xy = new Float32Array(TPS * 2);
-    for (var i = 0; i < TPS; i++) {
-        curr_xy[i << 1] = corners[i].x;
-        curr_xy[(i << 1) + 1] = corners[i].y;
-        prev_pt[i] = {'x':0, 'y':0};
-        curr_pt[i] = {'x':0, 'y':0};
+    var i = 0, j = 0;
+    while (i < TPS && j < corners.length) {
+        if (selectWithDistance(i, corners[j])) {
+            curr_xy[i << 1] = corners[j].x;
+            curr_xy[(i << 1) + 1] = corners[j].y;
+            prev_pt[i] = {'x':0, 'y':0};
+            curr_pt[i] = {'x':0, 'y':0};
+            i++;
+        }
+        j++;
     }
-    track_count = 0;
+    point_count = i;
+    
     console.log("init tracking");
+    track_count = 0;
+    return true;
+}
+
+function selectWithDistance(count, corner) {
+    for (var i = 0; i < count; i++) {
+        var xdist = curr_xy[i << 1] - corner.x;
+        var ydist = curr_xy[(i << 1) + 1] - corner.y;
+        var dist = Math.abs(xdist) + Math.abs(ydist); //Manhattan Distance
+      //  var dist = Math.sqrt(xdist * xdist + ydist * ydist); //Euclidean Distance
+        if (dist < 16)
+            return false;
+    }
     return true;
 }
 
 var homo_kernel = new jsfeat.motion_model.homography2d();
-function tracking(imageData) {
+function tracking(imageData, context) {
     var _pt_xy = prev_xy;
     prev_xy = curr_xy;
     curr_xy = _pt_xy;
@@ -80,7 +98,7 @@ function tracking(imageData) {
         for (var i = 0; i < point_count; i++) {
             arctx.fillRect(curr_pt[i].x, curr_pt[i].y, 4, 4);
         }*/
+    //    drawProgress(context);
     }
     return point_count;
 }
-
