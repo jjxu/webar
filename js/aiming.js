@@ -38,7 +38,7 @@ function loadFairy(context, fairyImg) {
         {'x':fairyWidth + baseX,'y':baseY}, 
         {'x':fairyWidth + baseX,'y':fairyHeight + baseY}, 
         {'x':baseX,'y':fairyHeight + baseY} ];
-/*
+    /*
     context.drawImage(fairyImg, 0, 0);
     fairyImgData = context.getImageData(0, 0, fairyWidth, fairyHeight);
 
@@ -59,6 +59,7 @@ var isAiming, isCaptured;
 var startAimingTime;
 var trans3x3;
 function drawAiming(context, matrix3x3, isReset) {
+        
     if (isReset) {
         fairyShape[0].x = baseX;
         fairyShape[0].y = baseY;
@@ -69,36 +70,41 @@ function drawAiming(context, matrix3x3, isReset) {
         fairyShape[3].x = baseX;
         fairyShape[3].y = fairyHeight + baseY;
         isAiming = false;
-  //      jsfeat.matmath.transpose(trans3x3, matrix3x3);
-    } else {
-   //     jsfeat.matmath.multiply_3x3(trans3x3, trans3x3, matrix3x3);
     }
-    transformCorners(matrix3x3.data, fairyShape);
-    /*
+/*        for (var i = 0; i < 9; i++)
+            trans3x3.data[i] = matrix3x3.data[i];
+    } else {
+        jsfeat.matmath.multiply_3x3(trans3x3, trans3x3, matrix3x3);
+    }
+   // console.log(trans3x3.data[1] + "-" + matrix3x3.data[1]); 
+    transformCorners(trans3x3.data, fairyShape);
+    
     var data = new Uint32Array(fairyImgData.data.buffer);
     for (var j = 0; j < fairyWidth * fairyHeight; j++) {
-        data[j] = (0xff << 24);
+        data[j] = 0;
     }
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 4; i++) {
         jsfeat.imgproc.warp_perspective(channels[i], channels[4], trans3x3, 0);
         for (var j = 0; j < fairyWidth * fairyHeight; j++) {
             data[j] = data[j] | (channels[4].data[j] << (i * 8));
         }
     }
-    console.log(data[0] + "-" + channels[4].data[0]);
-
-    context.putImageData(fairyImgData, fairyShape[0].x, fairyShape[0].y);*/
+   // console.log(data[0] + "-" + channels[4].data[0]);
+    context.putImageData(fairyImgData, fairyShape[0].x, fairyShape[0].y);
+    */
+    transformCorners(matrix3x3.data, fairyShape);
     context.drawImage(fairyImg, fairyShape[0].x, fairyShape[0].y);
     drawAimingBox(context);
-/*
+
+    /*
     context.beginPath();
     context.moveTo(fairyShape[0].x, fairyShape[0].y);
     context.lineTo(fairyShape[1].x, fairyShape[1].y);
     context.lineTo(fairyShape[2].x, fairyShape[2].y);
     context.lineTo(fairyShape[3].x, fairyShape[3].y);
     context.lineTo(fairyShape[0].x, fairyShape[0].y);
-    context.stroke();
-*/
+    context.stroke();*/
+
     if (isAimed()) {
         if (!isAiming) {
             startAimingTime = Date.now();
@@ -141,7 +147,7 @@ function drawAimingBox(context) {
 
 function drawProgress(context) {
     var elapsedTime = Date.now() - startAimingTime;
-    var percent = 1.0 - (elapsedTime / 5000.0);
+    var percent = 1.0 - (elapsedTime / 3000.0);
     if (percent <= 0) {
         isCaptured = true;
         drawCapture(context);
@@ -151,5 +157,13 @@ function drawProgress(context) {
 }
 
 function drawCapture(context) {
+    context.clearRect(0, 0, width, height);
     context.drawImage(captureImg, (width - captureImg.width) / 2, (height - captureImg.height) / 2);
+}
+
+function captureFairy(event) {
+    if (isCaptured) {
+        isCaptured = false;
+        isTracking = false;
+    }
 }
