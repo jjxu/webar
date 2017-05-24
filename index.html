@@ -38,6 +38,9 @@
 	</div>
 	<div id="3D-canvas" class="div-canvas">
 	</div>
+	<!--<div style="overflow: hidden;width:0px;height:0px;">
+		<img id="captureimg" src="./imgs/rp4.gif"></img>
+	</div> -->
 
 	<script type="text/javascript">
 		var width = window.innerWidth;
@@ -54,7 +57,7 @@
 		bufcan.height = height;
 		//var bufctx = bufcan.getContext('2d');
 
-		var gl = bufcan.getContext('experimental-webgl');
+		var gl = bufcan.getContext('webgl'); //experimental-webgl
 		var tex = gl.createTexture();
   		gl.bindTexture(gl.TEXTURE_2D, tex);
   		gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer());
@@ -68,11 +71,13 @@
 		arcan.height = height;
 		arctx.fillStyle = "green";
 		arctx.strokeStyle = "rgb(0,255,0)";
+        //arctx.lineWidth = 1;
+		//alert(width + ":" + height);
+
+		//var captureimg = document.getElementById('captureimg');
+		//captureimg.play();
 		//isCaptured = true;
 		document.addEventListener('touchend', captureFairy, false);
-        //arctx.lineWidth = 1;
-		
-		//alert(width + ":" + height);
 
 		//	initModel(width, height);
 		initAiming(width, height, arctx);
@@ -148,6 +153,7 @@
 
 		function successFunc(stream) {
 			webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
+			//var inputTrack = stream.getVideoTracks()[0];
 			//video.src = URL.createObjectURL(stream);
 			//video.src = stream;
 			webcam.play();

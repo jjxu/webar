@@ -16,6 +16,7 @@ function initAiming(width, height, context) {
     fairyImg.src = "./imgs/rp0.jpg";
 
     captureImg = new Image();
+    //captureImg.src = "./imgs/rp4.gif";
     captureImg.src = "./imgs/rp1.jpg";
     isCaptured = false;
     if (fairyImg.complete) {
@@ -117,12 +118,17 @@ function drawAiming(context, matrix3x3, isReset) {
 }
 
 function isAimed() {
-    for (var i = 0; i < 4; i++) {
+    /*for (var i = 0; i < 4; i++) {
         if ((fairyShape[i].x < aimingBox[0].x) || (fairyShape[i].x > aimingBox[2].x)
             || (fairyShape[i].y < aimingBox[0].y) || (fairyShape[i].y > aimingBox[2].y))
             return false;
     }
-    return true;
+    return true;*/
+    if ((fairyShape[0].x < aimingBox[0].x) || (fairyShape[0].x > (aimingBox[2].x - fairyWidth))
+        || (fairyShape[0].y < aimingBox[0].y) || (fairyShape[0].y > (aimingBox[2].y - fairyHeight)))
+        return false;
+    else
+        return true;
 }
 
 function drawAimingBox(context) {
@@ -150,7 +156,8 @@ function drawProgress(context) {
     var percent = 1.0 - (elapsedTime / 3000.0);
     if (percent <= 0) {
         isCaptured = true;
-        drawCapture(context);
+        setInterval(drawCapture(context), 100);
+        //drawCapture(context);
     } else {
         context.fillRect(0, height - 20, width * percent, 20);
     }
@@ -159,6 +166,7 @@ function drawProgress(context) {
 function drawCapture(context) {
     context.clearRect(0, 0, width, height);
     context.drawImage(captureImg, (width - captureImg.width) / 2, (height - captureImg.height) / 2);
+    //context.drawImage(captureimg, 0, 0);
 }
 
 function captureFairy(event) {
