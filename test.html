@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>WebAR</title>
+<style>
+	.div-relative{position:relative; color:#000; border:1px solid #000; width:100%; height:100%}    
+	.div-screen{ position:relative; left:0px; top:0px; padding-bottom:75%;  background-color:transparent; width:100%; height:100%}
+	.div-screen video{ position:absolute; left:0px; top:0px; width:100%; height:100%}
+	.div-canvas{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:100%} 
+	body{margin: 0; overflow: hidden;}
+</style>
+</head>
+<body>
+	<div class="div-screen">
+		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
+		<video id="webcam" autoplay style="display:none; width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
+	</div>
+<!--	<div class="div-canvas">
+		<canvas id="bufcan" style="display:none"></canvas>
+	</div> -->
+	<div class="div-canvas">
+		<canvas id="arcan" style="display:block"></canvas>
+	</div>
+
+	<script type="text/javascript">
+		var width = window.innerWidth;
+		//var height = window.innerHeight;
+		var height = width / 3 * 4;
+		var size = width * height;
+		console.log("size:" + width + "*" + height);
+		var webcam = document.getElementById('webcam');
+		webcam.style.width = width + "px";
+		webcam.style.height = height + "px";
+/*
+		var bufcan = document.getElementById('bufcan');
+		bufcan.width = width;
+		bufcan.height = height;
+		//var bufctx = bufcan.getContext('2d');
+
+		var gl = bufcan.getContext('webgl'); //experimental-webgl
+		var tex = gl.createTexture();
+  		gl.bindTexture(gl.TEXTURE_2D, tex);
+  		gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer());
+  		gl.viewport(0, 0, width, height);
+ 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+ 		var imageData = new Uint8Array(width * height * 4);
+*/
+		var arcan = document.getElementById('arcan');
+		var arctx = arcan.getContext('2d');
+		arcan.width = width;
+		arcan.height = height;
+		arctx.fillStyle = "green";
+		arctx.strokeStyle = "rgb(0,255,0)";
+        //arctx.lineWidth = 1;
+		//alert(width + ":" + height);
+		
+		function hasGetUserMedia() {
+			return  !!(navigator.getUserMedia
+				|| navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+				|| navigator.msGetUserMedia);
+		}
+		
+		window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
+		var videoDevices = []; //存储设备源ID
+		//MediaStreamTrack.getSources(function(sourceInfos) {
+		navigator.mediaDevices.enumerateDevices().then(function(devices) {
+			for (var i = 0; i < devices.length; i++) {
+				var device = devices[i];
+				if ((device.kind === 'videoinput') && (device.label.indexOf('back') >= 0)) {
+					videoDevices.push(device.deviceId);
+				//	videoLabels.push(device.label);
+				}
+			}
+			openWebCam();
+			arcan.style.display = 'block';
+		});
+		
+		function openWebCam() {
+			if (navigator.getUserMedia) { // 标准的API
+				navigator.getUserMedia({
+					video : {
+						deviceId : { exact: videoDevices[0]  },
+						width : { min: width, ideal : width, max: width },
+						height : { min: height, ideal : height, max: height },
+						/*'optional' : [ {
+							'deviceId' : exArray[1] //0为前置摄像头，1为后置  
+						} ]*/
+					},
+					audio : false
+				}, successFunc, errorFunc);
+			} else if (navigator.webkitGetUserMedia) { // WebKit 核心的API
+				navigator.webkitGetUserMedia({
+					video : {
+						deviceId : { exact: videoDevices[0] },
+						width : { min: width, ideal : width, max: width },
+						height : { min: height, ideal : height, max: height },
+					},
+					audio : false
+				}, successFunc, errorFunc);
+			} else {
+				alert('Native device media streaming (getUserMedia) not supported in your browser.');
+			}
+		}
+
+		var localStream, grayImg;
+
+		function successFunc(stream) {
+			webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
+			//var inputTrack = stream.getVideoTracks()[0];
+			//video.src = URL.createObjectURL(stream);
+			//video.src = stream;
+			webcam.play();
+			localStream = stream;
+
+			requestAnimationFrame(imageProcessing);
+		}
+
+		function errorFunc(error) {
+			console.log("Error:" + error.name);
+		}
+
+		function drawStatus() {
+			//drawModel(ptnShape);
+			
+			var fps = 1000.0 / (Date.now()- lastTime);
+			var tmp = "FPS:" + fps;
+			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2), 20, 20);
+		}
+
+		function closeWebCam() {
+			if (webcam) {
+				webcam.pause();
+				webcam.src = '';
+			//	webcam.load();
+			}
+			if (localStream && localStream.stop) {
+				localStream.stop();
+			}
+			stream = null;
+		}
+		
+		
+		//var imageData;
+		function getImageData() {
+			arctx.drawImage(webcam, 0, 0);
+		//	imageData = arctx.getImageData(0, 0, width, height).data;
+		//	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
+		///	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
+		}
+
+		function imageProcessing() {
+			lastTime = Date.now();
+			requestAnimationFrame(imageProcessing);
+			if (webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
+				getImageData();
+			//	arctx.clearRect(0, 0, width, height);
+				//drawStatus(0, tps);
+				//return;
+		//	snapshot();
+			}
+			drawStatus();
+		}
+
+		window.unload = closeWebCam();
+	</script>
+</body>
+</html>
