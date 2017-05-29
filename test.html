@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>WebAR</title>
 <style>
-	.div-relative{position:relative; color:#000; border:1px solid #000; width:100%; height:100%}    
-	.div-screen{ position:relative; left:0px; top:0px; padding-bottom:75%;  background-color:transparent; width:100%; height:100%}
+	.div-relative{position:relative; color:#000; border:1px solid #000;}    
+	.div-screen{ position:relative; left:0px; top:0px; padding-bottom:85%;  background-color:transparent; width:100%; height:100%}
 	.div-screen video{ position:absolute; left:0px; top:0px; width:100%; height:100%}
 	.div-canvas{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:100%} 
 	body{margin: 0; overflow: hidden;}
@@ -15,14 +15,18 @@
 <body>
 	<div class="div-screen">
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
-		<video id="webcam" autoplay style="display:none; width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
+		<video id="webcam" autoplay style="display:block; width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
+<!--
+	<div class="div-canvas" id="viddiv">
+		<video id="arvid" autoplay style="display:none; width:80%; height: 80%;" src="./imgs/cctv.mp4" type="video/mp4">您的浏览器不支持video标签。 </video>
+	</div> -->
 <!--	<div class="div-canvas">
-		<canvas id="bufcan" style="display:none"></canvas>
+		<canvas id="bufcan" style="display:block"></canvas>
 	</div> -->
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:block"></canvas>
-	</div>
+	</div> 
 
 	<script type="text/javascript">
 		var width = window.innerWidth;
@@ -33,20 +37,25 @@
 		var webcam = document.getElementById('webcam');
 		webcam.style.width = width + "px";
 		webcam.style.height = height + "px";
+
+		var arvid = document.getElementById('arvid');
+		document.addEventListener('touchend', playVid, false);
+
+		var isPlayed = false;
 /*
 		var bufcan = document.getElementById('bufcan');
 		bufcan.width = width;
 		bufcan.height = height;
 		//var bufctx = bufcan.getContext('2d');
 
-		var gl = bufcan.getContext('webgl'); //experimental-webgl
+		var gl = bufcan.getContext('experimental-webgl'); //
 		var tex = gl.createTexture();
   		gl.bindTexture(gl.TEXTURE_2D, tex);
   		gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer());
   		gl.viewport(0, 0, width, height);
  		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
- 		var imageData = new Uint8Array(width * height * 4);
-*/
+ 		var imageData = new Uint8Array(width * height * 4); */
+
 		var arcan = document.getElementById('arcan');
 		var arctx = arcan.getContext('2d');
 		arcan.width = width;
@@ -74,7 +83,6 @@
 				}
 			}
 			openWebCam();
-			arcan.style.display = 'block';
 		});
 		
 		function openWebCam() {
@@ -106,6 +114,24 @@
 
 		var localStream, grayImg;
 
+
+function playVid() {
+	arvid.style.display = "block";
+	arvid.play();
+	isPlayed = true;
+}
+
+var topv = 0;
+
+function moveVid() {
+	if (isPlayed) {
+		topv = topv + 10;
+		var viddiv = document.getElementById('viddiv');
+		viddiv.style.top = topv + "px";
+		console.log(">>" + topv);
+	}
+}
+
 		function successFunc(stream) {
 			webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
 			//var inputTrack = stream.getVideoTracks()[0];
@@ -113,20 +139,37 @@
 			//video.src = stream;
 			webcam.play();
 			localStream = stream;
-
 			requestAnimationFrame(imageProcessing);
+			//playVid();
+			//setInterval(moveVid, 200);
 		}
 
 		function errorFunc(error) {
 			console.log("Error:" + error.name);
 		}
-
+/*
 		function drawStatus() {
-			//drawModel(ptnShape);
-			
 			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
 			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2), 20, 20);
+		}*/
+
+		var lastTime, ptnDescs, scnDescs;
+		var isTracking = false;
+		//var imageData;
+		function getImageData() {
+			arctx.drawImage(webcam, 0, 0);
+		//	imageData = arctx.getImageData(0, 0, width, height).data;
+		
+		//	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
+		//	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
+		}
+
+		var lastTime;
+		function imageProcessing() {
+			lastTime = Date.now();
+			getImageData();
+			requestAnimationFrame(imageProcessing);
 		}
 
 		function closeWebCam() {
@@ -142,26 +185,6 @@
 		}
 		
 		
-		//var imageData;
-		function getImageData() {
-			arctx.drawImage(webcam, 0, 0);
-		//	imageData = arctx.getImageData(0, 0, width, height).data;
-		//	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
-		///	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
-		}
-
-		function imageProcessing() {
-			lastTime = Date.now();
-			requestAnimationFrame(imageProcessing);
-			if (webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
-				getImageData();
-			//	arctx.clearRect(0, 0, width, height);
-				//drawStatus(0, tps);
-				//return;
-		//	snapshot();
-			}
-			drawStatus();
-		}
 
 		window.unload = closeWebCam();
 	</script>
