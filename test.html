@@ -140,13 +140,13 @@ function moveVid() {
 			webcam.play();
 			localStream = stream;
 			//requestAnimationFrame(imageProcessing);
-		/*	webcam.addEventListener("timeupdate", function()
+			webcam.addEventListener("timeupdate", function()
 			  {
 			  imageProcessing();
 			  }
-			);*/
+			);
 			//playVid();
-			setInterval(imageProcessing, 100);
+			//setInterval(imageProcessing, 100);
 		}
 
 		function errorFunc(error) {
@@ -163,7 +163,6 @@ function moveVid() {
 		var isTracking = false;
 		//var imageData;
 		function getImageData() {
-			arctx.clearRect(0, 0, width, height);
 			arctx.drawImage(webcam, 0, 0);
 		//	imageData = arctx.getImageData(0, 0, width, height).data;
 
