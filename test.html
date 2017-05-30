@@ -139,9 +139,14 @@ function moveVid() {
 			//video.src = stream;
 			webcam.play();
 			localStream = stream;
-			requestAnimationFrame(imageProcessing);
+			//requestAnimationFrame(imageProcessing);
+		/*	webcam.addEventListener("timeupdate", function()
+			  {
+			  imageProcessing();
+			  }
+			);*/
 			//playVid();
-			//setInterval(moveVid, 200);
+			setInterval(imageProcessing, 100);
 		}
 
 		function errorFunc(error) {
@@ -160,7 +165,7 @@ function moveVid() {
 		function getImageData() {
 			arctx.drawImage(webcam, 0, 0);
 		//	imageData = arctx.getImageData(0, 0, width, height).data;
-		
+
 		//	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
 		//	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
 		}
@@ -169,7 +174,7 @@ function moveVid() {
 		function imageProcessing() {
 			lastTime = Date.now();
 			getImageData();
-			requestAnimationFrame(imageProcessing);
+			//requestAnimationFrame(imageProcessing);
 		}
 
 		function closeWebCam() {
