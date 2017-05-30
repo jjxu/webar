@@ -163,6 +163,7 @@ function moveVid() {
 		var isTracking = false;
 		//var imageData;
 		function getImageData() {
+			arctx.clearRect(0, 0, width, height);
 			arctx.drawImage(webcam, 0, 0);
 		//	imageData = arctx.getImageData(0, 0, width, height).data;
 
@@ -173,6 +174,7 @@ function moveVid() {
 		var lastTime;
 		function imageProcessing() {
 			lastTime = Date.now();
+
 			getImageData();
 			//requestAnimationFrame(imageProcessing);
 		}
