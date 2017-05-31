@@ -165,7 +165,8 @@ function moveVid() {
 			arctx.clearRect(0, 0, width, height);
 			var fps = 1000.0 / (Date.now() - lastTime);
 			var tmp = "FPS:" + fps;
-			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "-" + count, 20, 20);
+			if (count > 0)
+				arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "+" + imageData[0] + "-" + count, 20, 20);
 			lastTime = Date.now();
 			
 		}
