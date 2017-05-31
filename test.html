@@ -64,6 +64,13 @@
 		arctx.strokeStyle = "rgb(0,255,0)";
         //arctx.lineWidth = 1;
 		//alert(width + ":" + height);
+
+		var vican = document.createElement('canvas');
+		vican.width = width;
+		vican.height = height;
+		var victx = vican.getContext('2d');
+
+
 		
 		function hasGetUserMedia() {
 			return  !!(navigator.getUserMedia
@@ -157,7 +164,7 @@ function moveVid() {
 		function drawStatus() {
 			var fps = 1000.0 / (Date.now() - lastTime);
 			var tmp = "FPS:" + fps;
-			arctx.fillText(tmp, 20, 20);
+			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2), 20, 20);
 			lastTime = Date.now();
 		}
 
@@ -165,7 +172,8 @@ function moveVid() {
 		var isTracking = false;
 		//var imageData;
 		function getImageData() {
-			arctx.drawImage(webcam, 0, 0);
+			victx.drawImage(webcam, 0, 0);
+			arctx.clearRect(0, 0, width, height);
 		//	imageData = arctx.getImageData(0, 0, width, height).data;
 
 		//	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
