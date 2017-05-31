@@ -139,12 +139,13 @@ function moveVid() {
 			//video.src = stream;
 			webcam.play();
 			localStream = stream;
-			//requestAnimationFrame(imageProcessing);
-			webcam.addEventListener("timeupdate", function()
+			requestAnimationFrame(imageProcessing);
+			lastTime = Date.now();
+			/*webcam.addEventListener("timeupdate", function()
 			  {
 			  imageProcessing();
 			  }
-			);
+			);*/
 			//playVid();
 			//setInterval(imageProcessing, 100);
 		}
@@ -152,12 +153,13 @@ function moveVid() {
 		function errorFunc(error) {
 			console.log("Error:" + error.name);
 		}
-/*
+
 		function drawStatus() {
-			var fps = 1000.0 / (Date.now()- lastTime);
+			var fps = 1000.0 / (Date.now() - lastTime);
 			var tmp = "FPS:" + fps;
-			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2), 20, 20);
-		}*/
+			arctx.fillText(tmp, 20, 20);
+			lastTime = Date.now();
+		}
 
 		var lastTime, ptnDescs, scnDescs;
 		var isTracking = false;
@@ -172,10 +174,9 @@ function moveVid() {
 
 		var lastTime;
 		function imageProcessing() {
-			lastTime = Date.now();
-
 			getImageData();
-			//requestAnimationFrame(imageProcessing);
+			requestAnimationFrame(imageProcessing);
+			drawStatus();
 		}
 
 		function closeWebCam() {
