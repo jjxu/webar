@@ -164,7 +164,7 @@ function moveVid() {
 		function drawStatus() {
 			var fps = 1000.0 / (Date.now() - lastTime);
 			var tmp = "FPS:" + fps;
-			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "-" + imageData[0], 20, 20);
+			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "-" + imageData[0] + "-" + webcam.currentTime, 20, 20);
 			lastTime = Date.now();
 		}
 
@@ -175,7 +175,6 @@ function moveVid() {
 			victx.drawImage(webcam, 0, 0);
 			imageData = victx.getImageData(0, 0, width, height).data;
 			arctx.clearRect(0, 0, width, height);
-			
 
 		//	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
 		//	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
