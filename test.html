@@ -164,7 +164,7 @@ function moveVid() {
 		function drawStatus() {
 			var fps = 1000.0 / (Date.now() - lastTime);
 			var tmp = "FPS:" + fps;
-			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "\t" + imageData[0], 20, 20);
+			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "-" + imageData[0], 20, 20);
 			lastTime = Date.now();
 		}
 
