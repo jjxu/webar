@@ -165,20 +165,24 @@ function moveVid() {
 			arctx.clearRect(0, 0, width, height);
 			var fps = 1000.0 / (Date.now() - lastTime);
 			var tmp = "FPS:" + fps;
-			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "-" + imageData[0] + "-" + webcam.currentTime, 20, 20);
+			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "-" + count, 20, 20);
 			lastTime = Date.now();
-			imageProcessing();
+			
 		}
 
 		var lastTime, ptnDescs, scnDescs;
 		var isTracking = false;
 		var imageData;
+		var lastAccessTime = 0;
+		var count = 0;
 		function getImageData() {
-			victx.drawImage(webcam, 0, 0);
-			imageData = victx.getImageData(0, 0, width, height).data;
-			
-			
+			if (webcam.currentTime !== lastAccessTime) {
+				lastAccessTime = webcam.currentTime;
 
+				victx.drawImage(webcam, 0, 0);
+				imageData = victx.getImageData(0, 0, width, height).data;
+				count++;
+			}
 		//	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
 		//	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
 		}
@@ -186,9 +190,8 @@ function moveVid() {
 		var lastTime;
 		function imageProcessing() {
 			getImageData();
-			setTimeout(drawStatus, 100);
-			//requestAnimationFrame(imageProcessing);
-			//drawStatus();
+			requestAnimationFrame(imageProcessing);
+			drawStatus();
 		}
 
 		function closeWebCam() {
