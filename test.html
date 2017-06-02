@@ -161,14 +161,19 @@ function moveVid() {
 			console.log("Error:" + error.name);
 		}
 
+		var data0 = 0;
+		var fps  = 0.0;
 		function drawStatus() {
 			arctx.clearRect(0, 0, width, height);
-			var fps = 1000.0 / (Date.now() - lastTime);
+			if (data0 != imageData[0]) {
+				data0 = imageData[0];
+				fps = 1000.0 / (Date.now() - lastTime);
+				lastTime = Date.now();
+			}
+			
 			var tmp = "FPS:" + fps;
 			if (count > 0)
 				arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "+" + imageData[0] + "-" + count, 20, 20);
-			lastTime = Date.now();
-			
 		}
 
 		var lastTime, ptnDescs, scnDescs;
