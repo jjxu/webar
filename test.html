@@ -177,13 +177,13 @@ function moveVid() {
 		var lastAccessTime = 0;
 		var count = 0;
 		function getImageData() {
-			if (webcam.currentTime !== lastAccessTime) {
+			//if (webcam.currentTime !== lastAccessTime) {
 				lastAccessTime = webcam.currentTime;
 
-				victx.drawImage(webcam, 0, 0);
+				victx.drawImage(webcam, 0, 0, width, height, 0, 0, width, height);
 				imageData = victx.getImageData(0, 0, width, height).data;
 				count++;
-			}
+		//}
 		//	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcam);
 		//	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
 		}
