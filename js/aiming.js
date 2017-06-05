@@ -15,9 +15,9 @@ function initAiming(width, height, context) {
     fairyImg = new Image();
     fairyImg.src = "./imgs/rp0.jpg";
 
-    captureImg = new Image();
+    //captureImg = new Image();
     //captureImg.src = "./imgs/rp4.gif";
-    captureImg.src = "./imgs/rp1.jpg";
+    //captureImg.src = "./imgs/rp1.jpg";
     isCaptured = false;
     if (fairyImg.complete) {
         loadFairy(context, fairyImg);
@@ -156,22 +156,29 @@ function drawProgress(context) {
     var percent = 1.0 - (elapsedTime / 3000.0);
     if (percent <= 0) {
         isCaptured = true;
-        setInterval(drawCapture(context), 100);
-        //drawCapture(context);
+        //setInterval(drawCapture(context), 100);
+        drawCapture(context);
+
     } else {
         context.fillRect(0, height - 20, width * percent, 20);
     }
 }
 
 function drawCapture(context) {
-    context.clearRect(0, 0, width, height);
-    context.drawImage(captureImg, (width - captureImg.width) / 2, (height - captureImg.height) / 2);
-    //context.drawImage(captureimg, 0, 0);
+    //context.clearRect(0, 0, width, height);
+    //context.drawImage(captureImg, (width - captureImg.width) / 2, (height - captureImg.height) / 2);
+    var captureDiv = document.getElementById('div-capture');
+    var captureImg = document.getElementById('captureimg');
+    captureDiv.style.left =  (width - captureImg.width) / 2 + 'px';
+    captureDiv.style.top = (height - captureImg.height) / 2 + 'px';
+    captureDiv.style.display = 'block';
 }
 
 function captureFairy(event) {
     if (isCaptured) {
         isCaptured = false;
         isTracking = false;
+        var captureDiv = document.getElementById('div-capture');
+        captureDiv.style.display = "none";
     }
 }

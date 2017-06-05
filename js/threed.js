@@ -95,9 +95,11 @@ function computerPos(shapes){
     model3d.rotation.y = -Math.atan2(rotation[0][2], rotation[2][2]);
     model3d.rotation.z =  Math.atan2(rotation[1][0], rotation[1][1]);
 
-    //model3d.rotation.x = 0;
-    //model3d.rotation.y = 0;
-   //model3d.rotation.z = 0;
+    model3d.rotation.y -= 0.5;
+
+   // model3d.rotation.x = 0;
+   // model3d.rotation.y = 0.5;
+   // model3d.rotation.z = 3.14;
 
     model3d.position.x =  translation[0];
     model3d.position.y =  translation[1];

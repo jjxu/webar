@@ -26,8 +26,8 @@
 	</div> -->
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:block"></canvas>
-	</div> 
-
+	</div>
+	
 	<script type="text/javascript">
 		var width = window.innerWidth;
 		//var height = window.innerHeight;
@@ -38,10 +38,18 @@
 		webcam.style.width = width + "px";
 		webcam.style.height = height + "px";
 
-		var arvid = document.getElementById('arvid');
-		document.addEventListener('touchend', playVid, false);
+		if(window.DeviceOrientationEvent) {
+		window.addEventListener('deviceorientation', function(event) {
+		    var alpha = event.alpha;
+		    var beta = event.beta;
+		    var gamma = event.gamma;
 
-		var isPlayed = false;
+		    arctx.clearRect(0, 0, width, height);
+			arctx.fillText("Alpha:" + Math.round(alpha)  + " Beta:" + Math.round(beta) + " Gamma:" + Math.round(gamma), 20, 20);
+		}, false);
+		}else{
+			console.log("不支持");
+		}
 /*
 		var bufcan = document.getElementById('bufcan');
 		bufcan.width = width;
@@ -69,8 +77,6 @@
 		vican.width = width;
 		vican.height = height;
 		var victx = vican.getContext('2d');
-
-
 		
 		function hasGetUserMedia() {
 			return  !!(navigator.getUserMedia
@@ -121,24 +127,6 @@
 
 		var localStream, grayImg;
 
-
-function playVid() {
-	arvid.style.display = "block";
-	arvid.play();
-	isPlayed = true;
-}
-
-var topv = 0;
-
-function moveVid() {
-	if (isPlayed) {
-		topv = topv + 10;
-		var viddiv = document.getElementById('viddiv');
-		viddiv.style.top = topv + "px";
-		console.log(">>" + topv);
-	}
-}
-
 		function successFunc(stream) {
 			webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
 			//var inputTrack = stream.getVideoTracks()[0];
@@ -146,7 +134,7 @@ function moveVid() {
 			//video.src = stream;
 			webcam.play();
 			localStream = stream;
-			requestAnimationFrame(imageProcessing);
+			//requestAnimationFrame(imageProcessing);
 			lastTime = Date.now();
 			/*webcam.addEventListener("timeupdate", function()
 			  {
@@ -185,7 +173,7 @@ function moveVid() {
 			//if (webcam.currentTime !== lastAccessTime) {
 				lastAccessTime = webcam.currentTime;
 
-				victx.drawImage(webcam, 0, 0, width, height, 0, 0, width, height);
+				victx.drawImage(webcam, 0, 0);
 				imageData = victx.getImageData(0, 0, width, height).data;
 				count++;
 		//}
@@ -211,8 +199,9 @@ function moveVid() {
 			}
 			stream = null;
 		}
+
 		
-		
+
 
 		window.unload = closeWebCam();
 	</script>

@@ -16,6 +16,7 @@
 	<script type="text/javascript" src="./js/threed.js"></script>
 	<script type="text/javascript" src="./js/aiming.js"></script>
 	<script type="text/javascript" src="./js/pattern.js"></script>
+	<script type="text/javascript" src="./js/video.js"></script>
 <!--    <script type="text/javascript" src="./libs/jquery-1.11.2.min.js"></script> -->
 <style>
 	.div-relative{position:relative; color:#000; border:1px solid #000; width:100%; height:100%}    
@@ -30,17 +31,20 @@
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
 		<video id="webcam" autoplay style="width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
-	<div class="div-canvas">
+<!--	<div class="div-canvas">
 		<canvas id="bufcan" style="display:none"></canvas>
-	</div>
+	</div> -->
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:none"></canvas>
 	</div>
 	<div id="3D-canvas" class="div-canvas">
 	</div>
-	<!--<div style="overflow: hidden;width:0px;height:0px;">
+	<div id="div-video" style="position:absolute; top:120px; display:none; background-color:transparent;">
+		<video id="arvideo" style="width:100%; height: 100%; " src="./imgs/cctv.mp4"></video>
+	</div>
+	<div id="div-capture" style="position:absolute; display:none; background-color:transparent;">
 		<img id="captureimg" src="./imgs/rp4.gif"></img>
-	</div> -->
+	</div>
 
 	<script type="text/javascript">
 		var width = window.innerWidth;
@@ -52,11 +56,11 @@
 		webcam.style.width = width + "px";
 		webcam.style.height = height + "px";
 
-		var bufcan = document.getElementById('bufcan');
+		//var bufcan = document.getElementById('bufcan');
+		var bufcan = document.createElement('canvas');
 		bufcan.width = width;
 		bufcan.height = height;
 		//var bufctx = bufcan.getContext('2d');
-
 		var gl = bufcan.getContext('webgl'); //experimental-webgl
 		var tex = gl.createTexture();
   		gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -72,15 +76,13 @@
 		arctx.fillStyle = "green";
 		arctx.strokeStyle = "rgb(0,255,0)";
         //arctx.lineWidth = 1;
-		//alert(width + ":" + height);
 
-		//var captureimg = document.getElementById('captureimg');
-		//captureimg.play();
-		//isCaptured = true;
-		document.addEventListener('touchend', captureFairy, false);
+		//document.addEventListener('touchend', captureFairy, false);
+		//document.addEventListener('touchend', playVideo, false);
 
-		//	initModel(width, height);
-		initAiming(width, height, arctx);
+		initModel(width, height);
+		//initAiming(width, height, arctx);
+		//initVideo()
 		initPattern();
 		
 		function hasGetUserMedia() {
@@ -101,9 +103,8 @@
 				}
 			}
 			openWebCam();
-			arcan.style.display = 'block';
 		});
-		
+
 		function openWebCam() {
 			if (navigator.getUserMedia) { // 标准的API
 				navigator.getUserMedia({
@@ -156,7 +157,10 @@
 			//var inputTrack = stream.getVideoTracks()[0];
 			//video.src = URL.createObjectURL(stream);
 			//video.src = stream;
-			webcam.play();
+			//webcam.play();
+			webcam.addEventListener('loadedmetadata', function() {
+      			webcam.play(); 
+      		}, false);
 			localStream = stream;
 
 			grayImg = new jsfeat.matrix_t(width, height, jsfeat.U8_t | jsfeat.C1_t);
@@ -169,6 +173,7 @@
 			homo3x3 = new jsfeat.matrix_t(3, 3, jsfeat.F32C1_t);
 			match_mask = new jsfeat.matrix_t(500, 1, jsfeat.U8C1_t);
 			requestAnimationFrame(imageProcessing);
+			arcan.style.display = 'block';
 		}
 
 		function errorFunc(error) {
@@ -201,25 +206,25 @@
 		function imageProcessing() {
 			lastTime = Date.now();
 			requestAnimationFrame(imageProcessing);
-			if (isCaptured) {
-				drawCapture(arctx);
+			if (isCaptured || isPlaying) {
 				return;
 			}
+
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				getImageData();
 				arctx.clearRect(0, 0, width, height);
-				//drawStatus(0, tps);
-				//return;
 				
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
-
 				if (isTracking) {
 					var tps = tracking(imageData, arctx);
 					if (tps >= 8) {
 						//jsfeat.matmath.multiply_3x3(homo3x3, homo3x3, track3x3);
 						if (drawShape(track3x3)) {
-							drawAiming(arctx, track3x3, false);
+							drawModel(ptnShape);
+							//drawAiming(arctx, track3x3, false);
+						//	drawPlayer(arctx, track3x3, false);
+						//	moveVideo();
 							drawStatus(0, tps);
 							return;
 						} else {
@@ -247,8 +252,10 @@
 					if (drawShape(homo3x3)) {
 						initTrack(imageData, corners, width, height);
 						isTracking = true;
-						drawAiming(arctx, homo3x3, true);
-						//canvas3d.style.display = "block";
+						//drawAiming(arctx, homo3x3, true);
+						//drawPlayer(arctx, homo3x3, true);
+						drawModel(ptnShape);
+						canvas3d.style.display = "block";
 					}
 				}
 
@@ -258,9 +265,8 @@
 		//	snapshot();
 		}
 
+
 		function drawStatus(mks, tps) {
-			//drawModel(ptnShape);
-			
 			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
 			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 20, 20);
@@ -450,38 +456,8 @@
             return true;
         }
 
-        function direction(pi, pj, pk) {
-			return (pi.x - pk.x) * (pi.y - pj.y) - (pi.y - pk.y) * (pi.x - pj.x);
-		}
+        
 
-		function isValidMatch(corners) {
-			var d1 = direction(corners[1], corners[3], corners[0]);
-			var d2 = direction(corners[1], corners[3], corners[2]);
-			var d3 = direction(corners[0], corners[2], corners[1]);
-			var d4 = direction(corners[0], corners[2], corners[3]);
-			if ((d1 * d2 < 0) && (d3 * d4 < 0))
-				return true;
-			else 
-				return false;
-		}
-
-        // project/transform rectangle corners with 3x3 Matrix
-        function transformCorners(M, corners) {
-            //var pt = [ {'x':0,'y':0}, {'x':w,'y':0}, {'x':w,'y':h}, {'x':0,'y':h} ];
-            var z=0.0, px=0.0, py=0.0;
-            for (var i = 0; i < 4; i++) {
-            	px = M[0]*corners[i].x + M[1]*corners[i].y + M[2];
-            	py = M[3]*corners[i].x + M[4]*corners[i].y + M[5];
-            	z = M[6]*corners[i].x + M[7]*corners[i].y + M[8];
-            	corners[i].x = px / z;
-            	corners[i].y = py / z;
-            }
-            return;
-        }
-
-	//	$(function() { 
-	//		alert("xxx");
-	//	});
 	//	window.onload = initPattern();
 		window.unload = closeWebCam();
 	</script>

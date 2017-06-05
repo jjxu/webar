@@ -5,7 +5,7 @@ var ptnCorners = [];
 
 function initPattern() {
 	var patternImg = new Image();
-	patternImg.src = "./imgs/hb.jpg";
+	patternImg.src = "./imgs/bmw.jpg";
 	if (patternImg.complete) {
 		loadPattern(patternImg);
 	} else {
@@ -47,4 +47,33 @@ function resetPatternShape() {
 	ptnShape[2].y = ptnHeight;
 	ptnShape[3].x = 0;
 	ptnShape[3].y = ptnHeight;
+}
+
+function direction(pi, pj, pk) {
+	return (pi.x - pk.x) * (pi.y - pj.y) - (pi.y - pk.y) * (pi.x - pj.x);
+}
+
+function isValidMatch(corners) {
+	var d1 = direction(corners[1], corners[3], corners[0]);
+	var d2 = direction(corners[1], corners[3], corners[2]);
+	var d3 = direction(corners[0], corners[2], corners[1]);
+	var d4 = direction(corners[0], corners[2], corners[3]);
+	if ((d1 * d2 < 0) && (d3 * d4 < 0))
+		return true;
+	else 
+		return false;
+}
+
+// project/transform rectangle corners with 3x3 Matrix
+function transformCorners(M, corners) {
+    //var pt = [ {'x':0,'y':0}, {'x':w,'y':0}, {'x':w,'y':h}, {'x':0,'y':h} ];
+    var z=0.0, px=0.0, py=0.0;
+    for (var i = 0; i < 4; i++) {
+        px = M[0]*corners[i].x + M[1]*corners[i].y + M[2];
+        py = M[3]*corners[i].x + M[4]*corners[i].y + M[5];
+        z = M[6]*corners[i].x + M[7]*corners[i].y + M[8];
+        corners[i].x = px / z;
+        corners[i].y = py / z;
+    }
+    return;
 }
