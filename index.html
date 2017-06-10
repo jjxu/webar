@@ -36,7 +36,7 @@
 	</div> -->
 	
 	<div id="div-video" style="position:absolute; display:none; background-color:transparent;">
-		<video id="arvideo" preload style="width:100%; height: auto; " src="./assets/cctv.mp4" type="video/mp4"></video>
+		<video id="arvideo" preload style="width:100%; height: auto; " src="./assets/xjp.mp4" type="video/mp4"></video>
 	</div>
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:block"></canvas>
@@ -232,7 +232,7 @@
 				}
 
 				jsfeat.imgproc.grayscale(imageData, width, height, grayImg);
-				var count = detectKeypoints(grayImg, corners, 120);
+				var count = detectKeypoints(grayImg, corners, 160);
 				//console.log("keypoint size:" + count);
 			//	drawKeypoints(corners, count);
 
