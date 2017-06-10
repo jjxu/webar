@@ -5,21 +5,17 @@ var ptnCorners = [];
 
 function initPattern() {
 	var patternImg = new Image();
-	patternImg.src = "./imgs/bmw.jpg";
-	if (patternImg.complete) {
+	patternImg.src = "./imgs/hb.jpg";
+	patternImg.onload = function() {
 		loadPattern(patternImg);
-	} else {
-		patternImg.onload = function() {
-			loadPattern(patternImg);
-		}
 	}
 }
 
 function loadPattern(patternImg) {
 	ptnWidth = patternImg.width;
 	ptnHeight = patternImg.height;
-	arctx.drawImage(patternImg, 0, 0, ptnWidth, ptnHeight);
-	var ptnImgData = arctx.getImageData(0, 0, ptnWidth, ptnHeight);
+	bufctx.drawImage(patternImg, 0, 0, ptnWidth, ptnHeight);
+	var ptnImgData = bufctx.getImageData(0, 0, ptnWidth, ptnHeight);
 	var ptnGrayImg = new jsfeat.matrix_t(ptnWidth, ptnHeight, jsfeat.U8_t | jsfeat.C1_t);
 	jsfeat.imgproc.grayscale(ptnImgData.data, ptnWidth, ptnHeight, ptnGrayImg);
 	//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
@@ -36,6 +32,10 @@ function loadPattern(patternImg) {
 
 	ptnShape = [ {'x':0,'y':0}, {'x':ptnWidth,'y':0}, {'x':ptnWidth,'y':ptnHeight}, {'x':0,'y':ptnHeight} ];
 	isPatternReady = true;
+
+	//initModel(width, height);
+	//initAiming(width, height, arctx);
+	initVideo();
 }
 
 function resetPatternShape() {

@@ -3,7 +3,7 @@ var aimingBox = [];
 var fairyShape = [];
 var cell;
 var fairyImg, captureImg;
-var baseX = 92, baseY = 176;
+var baseX, baseY;
 
 function initAiming(width, height, context) {
     cell = width / 16;
@@ -19,12 +19,8 @@ function initAiming(width, height, context) {
     //captureImg.src = "./imgs/rp4.gif";
     //captureImg.src = "./imgs/rp1.jpg";
     isCaptured = false;
-    if (fairyImg.complete) {
+    fairyImg.onload = function() {
         loadFairy(context, fairyImg);
-    } else {
-        fairyImg.onload = function() {
-            loadFairy(context, fairyImg);
-        }
     }
 }
 
@@ -64,12 +60,12 @@ function drawAiming(context, matrix3x3, isReset) {
     if (isReset) {
         fairyShape[0].x = baseX;
         fairyShape[0].y = baseY;
-        fairyShape[1].x = fairyWidth + baseX;
+     /*   fairyShape[1].x = fairyWidth + baseX;
         fairyShape[1].y = baseY;
         fairyShape[2].x = fairyWidth + baseX;
         fairyShape[2].y = fairyHeight + baseY;
         fairyShape[3].x = baseX;
-        fairyShape[3].y = fairyHeight + baseY;
+        fairyShape[3].y = fairyHeight + baseY; */
         isAiming = false;
     }
 /*        for (var i = 0; i < 9; i++)

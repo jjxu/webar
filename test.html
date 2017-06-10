@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<!-- <meta name="apple-mobile-web-app-capable" content="yes"> --> <!-- iOs -->
+<meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>WebAR</title>
 <style>
 	.div-relative{position:relative; color:#000; border:1px solid #000;}    
@@ -12,15 +15,15 @@
 	body{margin: 0; overflow: hidden;}
 </style>
 </head>
-<body>
+<body onLoad="setTimeout(function() {console.log('xxxxxx');window.scrollTo(0, 1);}, 100);">
 	<div class="div-screen">
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
 		<video id="webcam" autoplay style="display:block; width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
-<!--
-	<div class="div-canvas" id="viddiv">
-		<video id="arvid" autoplay style="display:none; width:80%; height: 80%;" src="./imgs/cctv.mp4" type="video/mp4">您的浏览器不支持video标签。 </video>
-	</div> -->
+
+	<div id="div-video" style="position:absolute; display:none; background-color:transparent;">
+		<video id="arvideo" preload style="width:100%; height: auto" src="./assets/xjp.mp4" type="video/mp4"></video>
+	</div>
 <!--	<div class="div-canvas">
 		<canvas id="bufcan" style="display:block"></canvas>
 	</div> -->
@@ -29,27 +32,46 @@
 	</div>
 	
 	<script type="text/javascript">
+
 		var width = window.innerWidth;
 		//var height = window.innerHeight;
-		var height = width / 9 * 16;
+		var height = width / 3 * 4;
 		var size = width * height;
 		console.log("size:" + width + "*" + height);
 		var webcam = document.getElementById('webcam');
 		webcam.style.width = width + "px";
 		webcam.style.height = height + "px";
 
-		if(window.DeviceOrientationEvent) {
-		window.addEventListener('deviceorientation', function(event) {
-		    var alpha = event.alpha;
-		    var beta = event.beta;
-		    var gamma = event.gamma;
+		var divvid = document.getElementById('div-video');
+   	 	var arvideo = document.getElementById('arvideo');
+   	 	var vidHeight, vidTop;
+   	 	var playImgTop, playImgLeft, closeImgLeft, closeImgTop;
+   	 	arvideo.addEventListener("loadedmetadata", function() {
+   	 			vidHeight = Math.round(width * arvideo.videoHeight / arvideo.videoWidth);
+   	 			vidTop = (height - vidHeight) / 2;
+   	 			divvid.style.top = vidTop + 'px';
 
-		    arctx.clearRect(0, 0, width, height);
-			arctx.fillText("Alpha:" + Math.round(alpha)  + " Beta:" + Math.round(beta) + " Gamma:" + Math.round(gamma), 20, 20);
-		}, false);
-		}else{
+   	 			playImgTop = (width - playImg.width) / 2;
+            	playImgLeft = vidTop + (vidHeight - playImg.width) / 2;
+
+            	closeImgLeft = width - closeImg.width;
+            	closeImgTop = vidTop - closeImg.height / 2;
+   	 		}
+		);
+/*
+		if (window.DeviceOrientationEvent) {
+			window.addEventListener('deviceorientation', function(event) {
+			    var alpha = event.alpha;
+			    var beta = event.beta;
+			    var gamma = event.gamma;
+
+			    arctx.clearRect(0, 0, width, height);
+				arctx.fillText("Alpha:" + Math.round(alpha)  + " Beta:" + Math.round(beta) + " Gamma:" + Math.round(gamma), 20, 20);
+			}, false);
+		} else {
 			console.log("不支持");
 		}
+		*/
 /*
 		var bufcan = document.getElementById('bufcan');
 		bufcan.width = width;
@@ -64,13 +86,15 @@
  		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
  		var imageData = new Uint8Array(width * height * 4); */
 
+ 		document.addEventListener('touchend', touch, false);
+
 		var arcan = document.getElementById('arcan');
 		var arctx = arcan.getContext('2d');
 		arcan.width = width;
 		arcan.height = height;
 		arctx.fillStyle = "green";
 		arctx.strokeStyle = "rgb(0,255,0)";
-        //arctx.lineWidth = 1;
+        arctx.lineWidth = 2;
 		//alert(width + ":" + height);
 
 		var vican = document.createElement('canvas');
@@ -143,6 +167,8 @@
 			);*/
 			//playVid();
 			//setInterval(imageProcessing, 100);
+
+			startScan();
 		}
 
 		function errorFunc(error) {
@@ -188,6 +214,82 @@
 			drawStatus();
 		}
 
+		var closeImg = new Image();
+    	closeImg.src = "./imgs/close.jpg";
+    	var playImg = new Image();
+    	playImg.src = "./imgs/4.png";
+
+    	var isPlaying = false;
+		function playVideo() {
+	        divvid.style.display = 'block';
+	        arvideo.play();
+	        arctx.drawImage(closeImg, closeImgLeft, closeImgTop);
+	        isPlaying = true;
+		}
+
+		function closeVideo(x, y) {
+			if (x >= closeImgLeft && x <= (closeImgLeft + closeImg.width) 
+				&& y >= closeImgTop && y <= (closeImgTop + closeImg.height)) {
+				arvideo.pause();
+				divvid.style.display = 'none';
+				arctx.clearRect(closeImgLeft, closeImgTop, closeImg.width, closeImg.height);
+				isPlaying = false;
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		function touch(event) {
+			//console.log();
+			var x = event.changedTouches[0].clientX;
+			var y = event.changedTouches[0].clientY;
+			if (!isPlaying) {
+				stopScan();
+				playVideo();
+			} else {
+				if (!closeVideo(x, y)) {
+					if (y >= vidTop && y <= (vidTop + vidHeight)) {
+						if (arvideo.paused) {
+							arctx.clearRect(playImgTop, playImgLeft, playImg.width, playImg.height);
+							arvideo.play();
+						} else {
+							arvideo.pause();
+							arctx.drawImage(playImg, playImgTop, playImgLeft);
+						}
+					}
+				}
+			}
+		}
+
+		var pos = 0;
+		var scanId;
+		var step = 5;
+		function startScan() {
+			scanId = setInterval( function() {
+				arctx.clearRect(0, pos - 5, width, 10);
+				arctx.beginPath();
+			    arctx.moveTo(0, pos);
+			    arctx.lineTo(width, pos);
+			    arctx.stroke();
+
+			    pos += step;
+			    if (pos > height) {
+			    	step = -5;
+			    	pos = height;
+			    }
+			    if (pos < 0) {
+			    	step = 5;
+			    	pos = 0;
+			    }
+			}, 50);
+		}
+
+		function stopScan() {
+			clearInterval(scanId);
+			arctx.clearRect(0, 0, width, height);
+		}
+
 		function closeWebCam() {
 			if (webcam) {
 				webcam.pause();
@@ -199,9 +301,18 @@
 			}
 			stream = null;
 		}
-
 		
+	//	addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); 
+	// 	function hideURLbar(){ window.scrollTo(0,1); }
 
+	//	window.onload=function(){  
+                /*if(document.documentElement.scrollHeight <= document.documentElement.clientHeight) {  
+                    bodyTag = document.getElementsByTagName('body')[0];  
+                    bodyTag.style.height = document.documentElement.clientWidth / screen.width * screen.height + 'px';  
+                }*/
+               // document.body.requestFullscreen();
+              // window.scrollTo(0,1);
+     //       }
 
 		window.unload = closeWebCam();
 	</script>
