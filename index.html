@@ -170,7 +170,7 @@
 			}
 			homo3x3 = new jsfeat.matrix_t(3, 3, jsfeat.F32C1_t);
 			match_mask = new jsfeat.matrix_t(500, 1, jsfeat.U8C1_t);
-			startScan();
+		//	startScan();
 			requestAnimationFrame(imageProcessing);
 		}
 
@@ -210,11 +210,11 @@
 
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				getImageData();
-				
+				arctx.clearRect(0, 0, width, height);
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
 				if (isTracking) {
-					arctx.clearRect(0, 0, width, height);
+					
 					var tps = tracking(imageData, arctx);
 					if (tps >= 8) {
 						//jsfeat.matmath.multiply_3x3(homo3x3, homo3x3, track3x3);
@@ -228,7 +228,7 @@
 						}
 					}
 					isTracking = false;
-					startScan();
+				//	startScan();
 				}
 
 				jsfeat.imgproc.grayscale(imageData, width, height, grayImg);
@@ -246,18 +246,16 @@
 				if (goodMatches >= 8)  {
 					resetPatternShape();
 					if (drawShape(homo3x3)) {
-						stopScan();
+					//	stopScan();
 						initTrack(imageData, corners, width, height);
 						isTracking = true;
 						//drawAiming(arctx, homo3x3, true);
 						drawPlayer(arctx, homo3x3, true);
 						//drawModel(ptnShape);
 						//canvas3d.style.display = "block";
-
-						drawStatus(goodMatches, 0);
 					}
 				}
-				
+				drawStatus(goodMatches, 0);
 			}
 			
 		//	snapshot();

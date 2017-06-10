@@ -14,7 +14,7 @@ function initVideo() {
     isPlaying = false;
 
     playerImg = new Image();
-    playerImg.src = "./imgs/4.png";
+    playerImg.src = "./imgs/player.png";
     playerImg.onload = loadPlayer;
 
     closeImg = new Image();
@@ -86,7 +86,7 @@ function closeVideo(x, y) {
         isPlaying = false;
         canPlay = false;
         isTracking = false;
-        startScan();
+     //   startScan();
         return true;
     } else {
         return false;
