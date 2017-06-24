@@ -10,7 +10,7 @@ var playerImgWidth, playerImgHeight;
 function initVideo() {
     divvid = document.getElementById('div-video');
     arvideo = document.getElementById('arvideo');
-    canPlay = true;
+    canPlay = false;
     isPlaying = false;
 
     playerImg = new Image();
@@ -18,7 +18,7 @@ function initVideo() {
     playerImg.onload = loadPlayer;
 
     closeImg = new Image();
-    closeImg.src = "./imgs/close.jpg";
+    closeImg.src = "./imgs/c1.png";
 
     arvideo.addEventListener("loadedmetadata", function() {
         vidHeight = Math.round(width * arvideo.videoHeight / arvideo.videoWidth);
@@ -40,7 +40,6 @@ function loadPlayer() {
 
     baseX = (ptnWidth - playerImgWidth) / 2;
     baseY = (ptnHeight - playerImgHeight) / 2;
-    console.log(baseX);
     
     playerShape = [ {'x':baseX,'y':baseY}, 
         {'x':playerImgWidth + baseX,'y':baseY}, 
@@ -48,7 +47,7 @@ function loadPlayer() {
         {'x':baseX,'y':playerImgHeight + baseY} ];
 }
 
-function drawPlayer(context, matrix3x3, isReset) {
+function drawPlayer(matrix3x3, isReset) {
     if (isReset) {
         playerShape[0].x = baseX;
         playerShape[0].y = baseY;
@@ -60,7 +59,7 @@ function drawPlayer(context, matrix3x3, isReset) {
         playerShape[3].y = playerImgHeight + baseY; */
     }
     transformCorners(matrix3x3.data, playerShape);
-    context.drawImage(playerImg, playerShape[0].x, playerShape[0].y);
+    arctx.drawImage(playerImg, playerShape[0].x, playerShape[0].y);
     canPlay = true;
 }
 
@@ -87,18 +86,17 @@ function closeVideo(x, y) {
         canPlay = false;
         isTracking = false;
      //   startScan();
+        requestAnimationFrame(imageProcessing);
         return true;
     } else {
         return false;
     }
 }
 
-function touch(event) {
-    if (!canPlay)
-        return;
-
-    var x = event.changedTouches[0].clientX;
-    var y = event.changedTouches[0].clientY;
+function touchPlayer(x, y) {
+    if (!canPlay) {
+        return true;
+    }
 
     if (!isPlaying) {
         if (x >= playerShape[0].x && x <= (playerShape[0].x + playerImgWidth) 
@@ -106,7 +104,8 @@ function touch(event) {
             playVideo();
         }
     } else {
-        if (!closeVideo(x, y)) {
+        var closed = closeVideo(x, y);
+        if (!closed) {
             if (y >= vidTop && y <= (vidTop + vidHeight)) {
                 if (arvideo.paused) {
                     arctx.clearRect(playerImgTop, playerImgLeft, playerImgWidth, playerImgHeight);
@@ -118,4 +117,9 @@ function touch(event) {
             }
         }
     }
+    
+    if (isPlaying)
+        return false;
+    else
+        return true;
 }

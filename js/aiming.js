@@ -5,45 +5,47 @@ var cell;
 var fairyImg, captureImg;
 var baseX, baseY;
 
-function initAiming(width, height, context) {
-    cell = width / 16;
-    aimingBox[0] = {'x':cell * 6, 'y':height / 2 - (cell << 1)};
-    aimingBox[1] = {'x':cell * 10, 'y':height / 2 - (cell << 1)};
-    aimingBox[2] = {'x':cell * 10, 'y':height / 2 + (cell << 1)};
-    aimingBox[3] = {'x':cell * 6, 'y':height / 2 + (cell << 1)};
-
+function initAiming(width, height) {
     fairyImg = new Image();
     fairyImg.src = "./imgs/rp0.jpg";
 
     //captureImg = new Image();
     //captureImg.src = "./imgs/rp4.gif";
-    //captureImg.src = "./imgs/rp1.jpg";
     isCaptured = false;
     fairyImg.onload = function() {
-        loadFairy(context, fairyImg);
+        loadFairy(fairyImg);
     }
+
+    cell = width / 16;
+    aimingBox[0] = {'x':cell * 6, 'y':height / 2 - (cell << 1)};
+    aimingBox[1] = {'x':cell * 10, 'y':height / 2 - (cell << 1)};
+    aimingBox[2] = {'x':cell * 10, 'y':height / 2 + (cell << 1)};
+    aimingBox[3] = {'x':cell * 6, 'y':height / 2 + (cell << 1)};
 }
 
-var fairyWidth, fairyHeight;
+var fairyImgWidth, fairyImgHeight;
 var channels = [];
 var fairyImgData;
-function loadFairy(context, fairyImg) {
-    fairyWidth = fairyImg.width;
-    fairyHeight = fairyImg.height;
+function loadFairy(fairyImg) {
+    fairyImgWidth = fairyImg.width;
+    fairyImgHeight = fairyImg.height;
     
     fairyShape = [ {'x':baseX,'y':baseY}, 
-        {'x':fairyWidth + baseX,'y':baseY}, 
-        {'x':fairyWidth + baseX,'y':fairyHeight + baseY}, 
-        {'x':baseX,'y':fairyHeight + baseY} ];
+        {'x':fairyImgWidth + baseX,'y':baseY}, 
+        {'x':fairyImgWidth + baseX,'y':fairyImgHeight + baseY}, 
+        {'x':baseX,'y':fairyImgHeight + baseY} ];
+
+    baseX = (ptnWidth - fairyImgWidth) / 2;
+    baseY = (ptnHeight - fairyImgHeight) / 2;
     /*
     context.drawImage(fairyImg, 0, 0);
-    fairyImgData = context.getImageData(0, 0, fairyWidth, fairyHeight);
+    fairyImgData = context.getImageData(0, 0, fairyImgWidth, fairyImgHeight);
 
     for (var i = 0; i < 5; i++) {
-        channels.push(new jsfeat.matrix_t(fairyWidth, fairyHeight, jsfeat.U8_t | jsfeat.C1_t));
+        channels.push(new jsfeat.matrix_t(fairyImgWidth, fairyImgHeight, jsfeat.U8_t | jsfeat.C1_t));
     }
     var data = new Uint32Array(fairyImgData.data.buffer);
-    for (var j = 0; j < fairyWidth * fairyHeight; j++) {
+    for (var j = 0; j < fairyImgWidth * fairyImgHeight; j++) {
         channels[0].data[j] = data[j];
         channels[1].data[j] = (data[j] >> 8);
         channels[2].data[j] = (data[j] >> 16);
@@ -55,17 +57,17 @@ function loadFairy(context, fairyImg) {
 var isAiming, isCaptured;
 var startAimingTime;
 var trans3x3;
-function drawAiming(context, matrix3x3, isReset) {
+function drawAiming(matrix3x3, isReset) {
         
     if (isReset) {
         fairyShape[0].x = baseX;
         fairyShape[0].y = baseY;
-     /*   fairyShape[1].x = fairyWidth + baseX;
+     /*   fairyShape[1].x = fairyImgWidth + baseX;
         fairyShape[1].y = baseY;
-        fairyShape[2].x = fairyWidth + baseX;
-        fairyShape[2].y = fairyHeight + baseY;
+        fairyShape[2].x = fairyImgWidth + baseX;
+        fairyShape[2].y = fairyImgHeight + baseY;
         fairyShape[3].x = baseX;
-        fairyShape[3].y = fairyHeight + baseY; */
+        fairyShape[3].y = fairyImgHeight + baseY; */
         isAiming = false;
     }
 /*        for (var i = 0; i < 9; i++)
@@ -90,27 +92,29 @@ function drawAiming(context, matrix3x3, isReset) {
     context.putImageData(fairyImgData, fairyShape[0].x, fairyShape[0].y);
     */
     transformCorners(matrix3x3.data, fairyShape);
-    context.drawImage(fairyImg, fairyShape[0].x, fairyShape[0].y);
-    drawAimingBox(context);
+    arctx.drawImage(fairyImg, fairyShape[0].x, fairyShape[0].y);
+    drawAimingBox(arctx);
 
     /*
-    context.beginPath();
-    context.moveTo(fairyShape[0].x, fairyShape[0].y);
-    context.lineTo(fairyShape[1].x, fairyShape[1].y);
-    context.lineTo(fairyShape[2].x, fairyShape[2].y);
-    context.lineTo(fairyShape[3].x, fairyShape[3].y);
-    context.lineTo(fairyShape[0].x, fairyShape[0].y);
-    context.stroke();*/
+    arctx.beginPath();
+    arctx.moveTo(fairyShape[0].x, fairyShape[0].y);
+    arctx.lineTo(fairyShape[1].x, fairyShape[1].y);
+    arctx.lineTo(fairyShape[2].x, fairyShape[2].y);
+    arctx.lineTo(fairyShape[3].x, fairyShape[3].y);
+    arctx.lineTo(fairyShape[0].x, fairyShape[0].y);
+    arctx.stroke();*/
 
     if (isAimed()) {
         if (!isAiming) {
             startAimingTime = Date.now();
             isAiming = true;
         }
-        drawProgress(context);
+        drawProgress(arctx);
     } else {
         isAiming = false;
     }
+
+    arctx.fillText("请将瞄准框对准红包，惊喜立现！", 100, height - 24);
 }
 
 function isAimed() {
@@ -120,8 +124,8 @@ function isAimed() {
             return false;
     }
     return true;*/
-    if ((fairyShape[0].x < aimingBox[0].x) || (fairyShape[0].x > (aimingBox[2].x - fairyWidth))
-        || (fairyShape[0].y < aimingBox[0].y) || (fairyShape[0].y > (aimingBox[2].y - fairyHeight)))
+    if ((fairyShape[0].x < aimingBox[0].x) || (fairyShape[0].x > (aimingBox[2].x - fairyImgWidth))
+        || (fairyShape[0].y < aimingBox[0].y) || (fairyShape[0].y > (aimingBox[2].y - fairyImgHeight)))
         return false;
     else
         return true;
@@ -161,20 +165,20 @@ function drawProgress(context) {
 }
 
 function drawCapture(context) {
-    //context.clearRect(0, 0, width, height);
-    //context.drawImage(captureImg, (width - captureImg.width) / 2, (height - captureImg.height) / 2);
     var captureDiv = document.getElementById('div-capture');
     var captureImg = document.getElementById('captureimg');
     captureDiv.style.left =  (width - captureImg.width) / 2 + 'px';
     captureDiv.style.top = (height - captureImg.height) / 2 + 'px';
     captureDiv.style.display = 'block';
+    arctx.clearRect(0, 0, width, height);
 }
 
-function captureFairy(event) {
+function captureFairy(x, y) {
     if (isCaptured) {
         isCaptured = false;
         isTracking = false;
         var captureDiv = document.getElementById('div-capture');
-        captureDiv.style.display = "none";
+        captureDiv.style.display = 'none';
+        requestAnimationFrame(imageProcessing);
     }
 }

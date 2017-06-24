@@ -5,7 +5,7 @@ var ptnCorners = [];
 
 function initPattern() {
 	var patternImg = new Image();
-	patternImg.src = "./imgs/xjp.jpg";
+	patternImg.src = "./imgs/flm.jpg";
 	patternImg.onload = function() {
 		loadPattern(patternImg);
 	}
@@ -33,9 +33,14 @@ function loadPattern(patternImg) {
 	ptnShape = [ {'x':0,'y':0}, {'x':ptnWidth,'y':0}, {'x':ptnWidth,'y':ptnHeight}, {'x':0,'y':ptnHeight} ];
 	isPatternReady = true;
 
-	//initModel(width, height);
-	//initAiming(width, height, arctx);
-	initVideo();
+	if (arType === 0)
+		initVideo();
+	if (arType === 1)
+		initAiming(width, height);
+	if (arType === 2)
+		initModel(width, height);
+	if (arType === 3)
+		initText();
 }
 
 function resetPatternShape() {

@@ -37,16 +37,15 @@ function initModel(width, height) {
     canvas3d = document.getElementById("3D-canvas");
     canvas3d.appendChild(renderer.domElement);
     
-    
     // call the render function
     model3d = new THREE.Object3D();
     var loader = new THREE.STLLoader();
-    loader.load("./assets/bmw.stl", function (geometry) {
+    loader.load("./assets/beauty.stl", function (geometry) {
         //console.log(geometry);
         var mat = new THREE.MeshLambertMaterial({color: 0x7777ff});
         model3d = new THREE.Mesh(geometry, mat);
         //model3d.rotation.x = -0.5 * Math.PI;
-        //model3d.scale.set(0.6, 0.6, 0.6);
+        //model3d.scale.set(32, 32, 32);
         scene.add(model3d);
     });
     //drawModel();
@@ -87,9 +86,9 @@ function computerPos(shapes){
     var rotation = pose.bestRotation;
     var translation = pose.bestTranslation;
 
-    model3d.scale.x = 0.6;
-    model3d.scale.y = 0.6;
-    model3d.scale.z = 0.6;
+    model3d.scale.x = 60;
+    model3d.scale.y = 60;
+    model3d.scale.z = 60;
 
     model3d.rotation.x = -Math.asin(-rotation[1][2]);
     model3d.rotation.y = -Math.atan2(rotation[0][2], rotation[2][2]);

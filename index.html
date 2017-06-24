@@ -17,44 +17,54 @@
 	<script type="text/javascript" src="./js/aiming.js"></script>
 	<script type="text/javascript" src="./js/pattern.js"></script>
 	<script type="text/javascript" src="./js/video.js"></script>
+	<script type="text/javascript" src="./js/webar.js"></script>
+	<script type="text/javascript" src="./js/text.js"></script>
 <!--    <script type="text/javascript" src="./libs/jquery-1.11.2.min.js"></script> -->
 <style>
 	.div-relative{position:relative; color:#000; border:1px solid #000; width:100%; height:100%}    
-	.div-screen{ position:relative; left:0px; top:0px; padding-bottom:75%;  background-color:transparent; width:100%; height:100%}
-	.div-screen video{ position:absolute; left:0px; top:0px; width:100%; height:100%}
-	.div-canvas{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:100%} 
+	.div-screen{ position:relative; left:0px; top:0px; padding-bottom:0%; width:100%; height:100%}
+	.div-canvas{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:100% } 
+	.div-overlay{ position:absolute; display:none; background-color:transparent } 
 	body{margin: 0; overflow: hidden;}
 </style>
 </head>
 <body>
 	<div class="div-screen">
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
-		<video id="webcam" autoplay style="width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
+		<video id="webcam" autoplay style="display:block; width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
-<!--	<div class="div-canvas">
-		<canvas id="bufcan" style="display:none"></canvas>
-	</div> -->
-	
-	<div id="div-video" style="position:absolute; display:none; background-color:transparent;">
-		<video id="arvideo" preload style="width:100%; height: auto; " src="./assets/xjp.mp4" type="video/mp4"></video>
+	<div id="div-ctrl" style="display:table; padding-bottom:100%; width:100%; background:black;" >
+		<div style="display:table-cell;  vertical-align:middle;">
+			<img id="img-ctrl-pause" style="display:block; margin:0 auto" src="./imgs/p1.png"></img>
+			<img id="img-ctrl-play" style="display:none; margin:0 auto" src="./imgs/p2.png" ></img>
+		</div>
 	</div>
+	<!--
+	<div id="div-video" class="div-overlay">
+		<video id="arvideo" preload style="width:100%; height:auto; " src="./assets/hyjz.mp4" type="video/mp4"></video>
+	</div>-->
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:block"></canvas>
 	</div>
-	<!--<div id="3D-canvas" class="div-canvas"></div>-->
-	<div id="div-capture" style="position:absolute; display:none; background-color:transparent;">
-		<img id="captureimg" src="./imgs/rp4.gif"></img>
+<!--	<div id="3D-canvas" class="div-canvas"></div>-->
+	<div id="div-capture" class="div-overlay">
+		<img id="captureimg" src="./imgs/rp2.gif"></img>
 	</div>
-
+	
 	<script type="text/javascript">
 		var width = window.innerWidth;
 		//var height = window.innerHeight;
-		var height = width / 3 * 4;
+		var height = width / 9 * 16;
 		var size = width * height;
-		console.log("size:" + width + "*" + height);
+		console.log("size:" + width + " * " + height);
 		var webcam = document.getElementById('webcam');
 		webcam.style.width = width + "px";
 		webcam.style.height = height + "px";
+
+		var divctrl = document.getElementById('div-ctrl');
+		divctrl.style.height = (window.innerHeight - height) + 'px';
+		var ctrlImgLeft = (width - 64) / 2;
+		var ctrlImgTop = height + (window.innerHeight - height - 64) / 2;
 
 		//var bufcan = document.getElementById('bufcan');
 		var bufcan = document.createElement('canvas');
@@ -73,14 +83,15 @@
 		var arctx = arcan.getContext('2d');
 		arcan.width = width;
 		arcan.height = height;
-		arctx.fillStyle = "green";
-		arctx.strokeStyle = "rgb(0,255,0)";
+		arctx.fillStyle = 'rgb(74,254,254)';
+		arctx.strokeStyle = "rgb(74,255,254)";
         arctx.lineWidth = 2;
+        arctx.font = "16px Arial";
 
 		//document.addEventListener('touchend', captureFairy, false);
-		//document.addEventListener('touchend', playVideo, false);
 		document.addEventListener('touchend', touch, false);
 
+		var arType = 3; // 0: video; 1: capture; 2: 3d; 3: text
 		initPattern();
 
 		function hasGetUserMedia() {
@@ -130,26 +141,7 @@
 			}
 		}
 
-		var localStream, grayImg;
-		var corners = [];
-		var matches = [];
-		var homo3x3, match_mask;
-		// our point match structure
-        var match_t = (function () {
-            function match_t(screen_idx, pattern_lev, pattern_idx, distance) {
-                if (typeof screen_idx === "undefined") { screen_idx=0; }
-                if (typeof pattern_lev === "undefined") { pattern_lev=0; }
-                if (typeof pattern_idx === "undefined") { pattern_idx=0; }
-                if (typeof distance === "undefined") { distance=0; }
-
-                this.screen_idx = screen_idx;
-                this.pattern_lev = pattern_lev;
-                this.pattern_idx = pattern_idx;
-                this.distance = distance;
-            }
-            return match_t;
-        })();
-
+		var localStream;
 		function successFunc(stream) {
 			webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
 			//var inputTrack = stream.getVideoTracks()[0];
@@ -160,16 +152,7 @@
       			webcam.play(); 
       		}, false);
 			localStream = stream;
-
-			grayImg = new jsfeat.matrix_t(width, height, jsfeat.U8_t | jsfeat.C1_t);
-			//blurImg = new jsfeat.matrix_t(width, height, jsfeat.U8_t | jsfeat.C1_t);
-			// you should use preallocated keypoint_t array
-			for (var i = 0; i < size; i++) {
-			    corners[i] = new jsfeat.keypoint_t(0, 0, 0, 0);
-			    matches[i] = new match_t();
-			}
-			homo3x3 = new jsfeat.matrix_t(3, 3, jsfeat.F32C1_t);
-			match_mask = new jsfeat.matrix_t(500, 1, jsfeat.U8C1_t);
+			initWebar();
 		//	startScan();
 			requestAnimationFrame(imageProcessing);
 		}
@@ -201,12 +184,13 @@
 		//	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
 		}
 
+		var isPaused = false;
 		function imageProcessing() {
+			if (isCaptured || isPlaying || isPaused)
+				return;
+
 			lastTime = Date.now();
 			requestAnimationFrame(imageProcessing);
-			if (isCaptured || isPlaying) {
-				return;
-			}
 
 			if (isPatternReady && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
 				getImageData();
@@ -214,34 +198,31 @@
 				//jsfeat.imgproc.gaussian_blur(grayImg, blurImg, 5);
 				//drawGrayImage(imageData, grayImg);
 				if (isTracking) {
-					
 					var tps = tracking(imageData, arctx);
 					if (tps >= 8) {
 						//jsfeat.matmath.multiply_3x3(homo3x3, homo3x3, track3x3);
 						if (drawShape(track3x3)) {
-							//drawModel(ptnShape);
-							//drawAiming(arctx, track3x3, false);
-							drawPlayer(arctx, track3x3, false);
-						//	moveVideo();
+							if (arType === 0)
+								drawPlayer(track3x3, false);
+							if (arType === 1)
+								drawAiming(track3x3, false);
+							if (arType === 2)
+								drawModel(ptnShape);
+							if (arType === 3)
+								drawText(track3x3, false);
+							
 							drawStatus(0, tps);
 							return;
 						}
 					}
 					isTracking = false;
+					if (arType === 2) {
+						canvas3d.style.display = 'none';
+					}
 				//	startScan();
 				}
 
-				jsfeat.imgproc.grayscale(imageData, width, height, grayImg);
-				var count = detectKeypoints(grayImg, corners, 160);
-				//console.log("keypoint size:" + count);
-			//	drawKeypoints(corners, count);
-
-			//	var cols = 32; // 32 Bytes / 256 BIT descriptor
-			//	var rows = count; // descriptors stored per row
-				scnDescs = new jsfeat.matrix_t(32, count, jsfeat.U8_t | jsfeat.C1_t);
-				jsfeat.orb.describe(grayImg, corners, count, scnDescs);
-				var candMatches = matchPattern(ptnDescs, scnDescs);
-				var goodMatches = findTransform(matches, candMatches);
+				var goodMatches = detecting(imageData);
 			//	console.log("candidate matches:" + candMatches  + "\tgood matches:" + goodMatches);
 				if (goodMatches >= 8)  {
 					resetPatternShape();
@@ -249,180 +230,28 @@
 					//	stopScan();
 						initTrack(imageData, corners, width, height);
 						isTracking = true;
-						//drawAiming(arctx, homo3x3, true);
-						drawPlayer(arctx, homo3x3, true);
-						//drawModel(ptnShape);
-						//canvas3d.style.display = "block";
+						if (arType === 0)
+							drawPlayer(homo3x3, true);
+						if (arType === 1)
+							drawAiming(homo3x3, true);
+						if (arType === 2) {
+							drawModel(ptnShape);
+							canvas3d.style.display = "block";
+						}
+						if (arType === 3)
+							drawText(homo3x3, true);
 					}
 				}
 				drawStatus(goodMatches, 0);
 			}
-			
 		//	snapshot();
 		}
-
 
 		function drawStatus(mks, tps) {
 			var fps = 1000.0 / (Date.now()- lastTime);
 			var tmp = "FPS:" + fps;
-			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 20, 20);
+		//	arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 10, 10);
 		}
-
-		function drawGrayImage(imageData, grayImg) {
-			var data_u32 = new Uint32Array(imageData.buffer);
-            var i = size; //grayImg.cols * grayImg.rows;
-            var pix = 0;
-            var alpha = (0xff << 24);
-            while(--i >= 0) {
-            	pix = grayImg.data[i];
-            	data_u32[i] = alpha | (pix << 16) | (pix << 8) | pix;
-            }
-            arctx.putImageData(imageData, 0, 0); //???imageData.data
-		}
-
-		function detectKeypoints(image, corners, maxAllowed) {//var threshold = 10;
-			//var border = 3;
-			jsfeat.fast_corners.set_threshold(10);
-			var count = jsfeat.fast_corners.detect(image, corners, 3);
-			//var count = jsfeat.yape06.detect(image, corners, 17);
-
-            // sort by score and reduce the count if needed
-            if(count > maxAllowed) {
-            	jsfeat.math.qsort(corners, 0, count - 1, function(a, b){return (b.score < a.score);});
-            	count = maxAllowed;
-            }
-            /*
-            // calculate dominant orientation for each keypoint
-           	for(var i = 0; i < count; ++i) {
-                corners[i].angle = ic_angle(img, corners[i].x, corners[i].y);
-            }
-			*/
-            return count;
-        }
-
-        function drawKeypoints(corners, count) {
-        	for (var i = 0; i < count; i++) {
-			    arctx.fillRect(corners[i].x, corners[i].y, 4, 4);
-			}
-        }
-		
-		// non zero bits count
-		function popcnt32(n) {
-			n -= ((n >> 1) & 0x55555555);
-			n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
-			return (((n + (n >> 4))& 0xF0F0F0F)* 0x1010101) >> 24;
-        }
-
-        // naive brute-force matching. each on screen point is 
-        // compared to all pattern points to find the closest match
-       	function matchPattern(ptnDescs, scnDescs) {
-       		//console.log("SCENE:" + scnDescs.rows + "PATTERN:" + ptnDescs.rows);
-       		var q_cnt = scnDescs.rows;
-       		var query_du8 = scnDescs.data;
-       		var query_u32 = scnDescs.buffer.i32; // cast to integer buffer
-       		var qd_off = 0;
-       		var qidx=0,lev=0,pidx=0,k=0;
-       		var num_matches = 0;
-
-            for (qidx = 0; qidx < q_cnt; qidx++) {
-            	var best_dist = 256;
-            	var best_dist2 = 256;
-            	var best_idx = -1;
-            //    var best_lev = -1;
-
-        //        for(lev = 0; lev < num_train_levels; lev++) {
-        //        	var lev_descr = ptnDescs[i];
-                	var ld_cnt = ptnDescs.rows;
-                	var ld_i32 = ptnDescs.buffer.i32; // cast to integer buffer
-                	var ld_off = 0;
-
-                    for(pidx = 0; pidx < ld_cnt; pidx++) {
-                    	var curr_d = 0;
-                        // our descriptor is 32 bytes so we have 8 Integers
-                        for(k=0; k < 8; ++k) {
-                        	curr_d += popcnt32( query_u32[qd_off+k]^ld_i32[ld_off+k] );
-                        }
-
-                        if(curr_d < best_dist) {
-                        	best_dist2 = best_dist;
-                        	best_dist = curr_d;
-                    //    	best_lev = lev; 
-                        	best_idx = pidx;
-                        } else if(curr_d < best_dist2) {
-                            best_dist2 = curr_d;
-                        }
-
-                        ld_off += 8; // next descriptor
-                    }
-            //    }
-
-                // filter out by some threshold\
-               // var match_threshold = 48;
-                /*if(best_dist < 48) {
-                    matches[num_matches].screen_idx = qidx;
-                //    matches[num_matches].pattern_lev = best_lev;
-                    matches[num_matches].pattern_idx = best_idx;
-                    num_matches++;
-                }*/
-                // filter using the ratio between 2 closest matches
-                if(best_dist < 0.6*best_dist2) {
-                    matches[num_matches].screen_idx = qidx;
-                //    matches[num_matches].pattern_lev = best_lev;
-                    matches[num_matches].pattern_idx = best_idx;
-                    num_matches++;
-                }
-
-                qd_off += 8; // next query descriptor
-            }
-            return num_matches;
-        }
-
-    	// estimate homography transform between matched points
-    	var mm_kernel = new jsfeat.motion_model.homography2d();
-        function findTransform(matches, count) {
-            // ransac params
-            //var num_model_points = 4;
-            //var reproj_threshold = 3;
-            var ransac_param = new jsfeat.ransac_params_t(4, 3, 0.5, 0.99);
-
-            var pattern_xy = [];
-            var screen_xy = [];
-
-            // construct correspondences
-            for(var i = 0; i < count; ++i) {
-                var m = matches[i];
-                var s_kp = corners[m.screen_idx];
-                var p_kp = ptnCorners[m.pattern_idx];
-                pattern_xy[i] = {"x":p_kp.x, "y":p_kp.y};
-                screen_xy[i] =  {"x":s_kp.x, "y":s_kp.y};
-            }
-
-            // estimate motion
-            var ok = false;
-            ok = jsfeat.motion_estimator.ransac(ransac_param, mm_kernel,
-                	pattern_xy, screen_xy, count, homo3x3, match_mask, 1000);
-
-            // extract good matches and re-estimate
-            var good_cnt = 0;
-            if(ok) {
-            	for(var i=0; i < count; ++i) {
-                    if(match_mask.data[i]) {
-                        pattern_xy[good_cnt].x = pattern_xy[i].x;
-                        pattern_xy[good_cnt].y = pattern_xy[i].y;
-                        screen_xy[good_cnt].x = screen_xy[i].x;
-                        screen_xy[good_cnt].y = screen_xy[i].y;
-                        good_cnt++;
-                    }
-                }
-
-                // run kernel directly with inliers only
-                mm_kernel.run(pattern_xy, screen_xy, homo3x3, good_cnt);
-            } else {
-                jsfeat.matmath.identity_3x3(homo3x3, 1.0);
-            }
-
-            return good_cnt;
-        }
 
         function drawShape(matrix3x3) {
             // get the projected pattern corners
@@ -441,14 +270,14 @@
 
             if (!isValidMatch(ptnShape))
             	return false;
-
+            /*
             arctx.beginPath();
             arctx.moveTo(ptnShape[0].x, ptnShape[0].y);
             arctx.lineTo(ptnShape[1].x, ptnShape[1].y);
             arctx.lineTo(ptnShape[2].x, ptnShape[2].y);
             arctx.lineTo(ptnShape[3].x, ptnShape[3].y);
             arctx.lineTo(ptnShape[0].x, ptnShape[0].y);
-            arctx.stroke();
+            arctx.stroke();*/
             return true;
         }
 
