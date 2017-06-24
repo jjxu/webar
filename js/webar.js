@@ -174,7 +174,7 @@ function matchPattern(ptnDescs, scnDescs) {
             num_matches++;
         }*/
         // filter using the ratio between 2 closest matches
-        if(best_dist < 0.6*best_dist2) {
+        if(best_dist < 0.8*best_dist2) {
             matches[num_matches].screen_idx = qidx;
             //    matches[num_matches].pattern_lev = best_lev;
             matches[num_matches].pattern_idx = best_idx;
