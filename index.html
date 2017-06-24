@@ -41,8 +41,8 @@
 	</div>
 	<!--
 	<div id="div-video" class="div-overlay">
-		<video id="arvideo" preload style="width:100%; height:auto; " src="./assets/hyjz.mp4" type="video/mp4"></video>
-	</div>-->
+		<video id="arvideo" preload style="width:100%; height:auto; " src="./assets/xjp.mp4" type="video/mp4"></video>
+	</div> -->
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:block"></canvas>
 	</div>
@@ -54,7 +54,7 @@
 	<script type="text/javascript">
 		var width = window.innerWidth;
 		//var height = window.innerHeight;
-		var height = width / 9 * 16;
+		var height = width / 3 * 4;
 		var size = width * height;
 		console.log("size:" + width + " * " + height);
 		var webcam = document.getElementById('webcam');
@@ -91,7 +91,7 @@
 		//document.addEventListener('touchend', captureFairy, false);
 		document.addEventListener('touchend', touch, false);
 
-		var arType = 3; // 0: video; 1: capture; 2: 3d; 3: text
+		var arType = 1; // 0: video; 1: capture; 2: 3d; 3: text
 		initPattern();
 
 		function hasGetUserMedia() {

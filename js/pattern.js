@@ -5,7 +5,7 @@ var ptnCorners = [];
 
 function initPattern() {
 	var patternImg = new Image();
-	patternImg.src = "./imgs/flm.jpg";
+	patternImg.src = "./imgs/dzb.jpg";
 	patternImg.onload = function() {
 		loadPattern(patternImg);
 	}

@@ -114,7 +114,7 @@ function drawAiming(matrix3x3, isReset) {
         isAiming = false;
     }
 
-    arctx.fillText("请将瞄准框对准红包，惊喜立现！", 100, height - 24);
+    arctx.fillText("请将瞄准框对准红包，惊喜立现！", 60, height - 24);
 }
 
 function isAimed() {
