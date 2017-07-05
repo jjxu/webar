@@ -9,6 +9,7 @@
 	<script type="text/javascript" src="./js-aruco/svd.js"></script>
 	<script type="text/javascript" src="./three/three.min.js"></script>
 	<script type="text/javascript" src="./three/STLLoader.js"></script>
+	<script type="text/javascript" src="./three/OrbitControls.js"></script>
     <script type="text/javascript" src="./libs/stats.js"></script>
     <script type="text/javascript" src="./libs/dat.gui.js"></script>
 	<script type="text/javascript" src="./jsfeat/jsfeat-min.js"></script>
@@ -33,7 +34,7 @@
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
 		<video id="webcam" autoplay style="display:block; width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
-	<div id="div-ctrl" style="display:table; padding-bottom:100%; width:100%; background:black;" >
+	<div id="div-ctrl" style="display:table; width:100%; background:black;" >
 		<div style="display:table-cell;  vertical-align:middle;">
 			<img id="img-ctrl-pause" style="display:block; margin:0 auto" src="./imgs/p1.png"></img>
 			<img id="img-ctrl-play" style="display:none; margin:0 auto" src="./imgs/p2.png" ></img>
@@ -41,20 +42,20 @@
 	</div>
 	<!--
 	<div id="div-video" class="div-overlay">
-		<video id="arvideo" preload style="width:100%; height:auto; " src="./assets/xjp.mp4" type="video/mp4"></video>
-	</div> -->
+		<video id="arvideo" preload style="width:100%; height:auto; " src="./assets/astana.mp4" type="video/mp4"></video>
+	</div>-->
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:block"></canvas>
 	</div>
-<!--	<div id="3D-canvas" class="div-canvas"></div>-->
-	<div id="div-capture" class="div-overlay">
+<!--	<div id="3D-canvas" class="div-canvas"></div> -->
+<!--	<div id="div-capture" class="div-overlay">
 		<img id="captureimg" src="./imgs/rp2.gif"></img>
-	</div>
+	</div>-->
 	
 	<script type="text/javascript">
 		var width = window.innerWidth;
 		//var height = window.innerHeight;
-		var height = width / 9 * 16;
+		var height = width / 3 * 4;
 		var size = width * height;
 		console.log("size:" + width + " * " + height);
 		var webcam = document.getElementById('webcam');
@@ -86,13 +87,17 @@
 		arctx.fillStyle = 'rgb(74,254,254)';
 		arctx.strokeStyle = "rgb(74,255,254)";
         arctx.lineWidth = 2;
-        arctx.font = "16px Arial";
+        arctx.font = "16px Arial Bold";
+
+		var arType = 3; // 0: video; 1: capture; 2: 3d; 3: text
+		initPattern();
 
 		//document.addEventListener('touchend', captureFairy, false);
 		document.addEventListener('touchend', touch, false);
-
-		var arType = 1; // 0: video; 1: capture; 2: 3d; 3: text
-		initPattern();
+		if (arType === 2) {
+			document.addEventListener('touchstart', touch3dStart, false);
+			document.addEventListener('touchmove', touch3dMove, false);
+		}
 
 		function hasGetUserMedia() {
 			return  !!(navigator.getUserMedia
@@ -211,7 +216,7 @@
 							if (arType === 3)
 								drawText(track3x3, false);
 							
-							drawStatus(0, tps);
+					//		drawStatus(0, tps);
 							return;
 						}
 					}
@@ -242,15 +247,16 @@
 							drawText(homo3x3, true);
 					}
 				}
-				drawStatus(goodMatches, 0);
+			//	drawStatus(goodMatches, 0);
 			}
 		//	snapshot();
 		}
 
 		function drawStatus(mks, tps) {
-			var fps = 1000.0 / (Date.now()- lastTime);
+			//arctx.clearRect(0, 0, width, height);
+			var fps = 1000.0 / (Date.now() - lastTime);
 			var tmp = "FPS:" + fps;
-		//	arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 10, 10);
+			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 10, 10);
 		}
 
         function drawShape(matrix3x3) {

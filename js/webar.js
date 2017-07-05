@@ -66,6 +66,8 @@ function touch(event) {
                 imgPause.style.display = 'none';
                 webcam.pause();
                 isPaused = true;
+
+                orbit();
             }
             return;
         }
