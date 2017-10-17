@@ -187,14 +187,14 @@
 		var fps  = 0.0;
 		function drawStatus() {
 			arctx.clearRect(0, 0, width, height);
-			if (data0 != imageData[0]) {
+		/*	if (data0 != imageData[0]) {
 				data0 = imageData[0];
 				fps = 1000.0 / (Date.now() - lastTime);
 				lastTime = Date.now();
 			}
-			
+			*/
 			var tmp = "FPS:" + fps;
-			if (count > 0)
+		//	if (count > 0)
 				arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "+" + window.innerWidth + "-" + window.innerHeight, 20, 20);
 		}
 
