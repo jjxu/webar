@@ -47,7 +47,7 @@
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:block"></canvas>
 	</div>
-<!--	<div id="3D-canvas" class="div-canvas"></div> -->
+	<div id="3D-canvas" class="div-canvas"></div>
 <!--	<div id="div-capture" class="div-overlay">
 		<img id="captureimg" src="./imgs/rp2.gif"></img>
 	</div>-->
@@ -55,7 +55,7 @@
 	<script type="text/javascript">
 		var width = window.innerWidth;
 		//var height = window.innerHeight;
-		var height = width / 9 * 16;
+		var height = width / 3 * 4;
 		var size = width * height;
 		console.log("size:" + width + " * " + height);
 		var webcam = document.getElementById('webcam');
@@ -87,9 +87,9 @@
 		arctx.fillStyle = 'rgb(74,254,254)';
 		arctx.strokeStyle = "rgb(74,255,254)";
         arctx.lineWidth = 2;
-        arctx.font = "16px Arial Bold";
+        //arctx.font = "16px Arial Bold";
 
-		var arType = 3; // 0: video; 1: capture; 2: 3d; 3: text
+		var arType = 2; // 0: video; 1: capture; 2: 3d; 3: text
 		initPattern();
 
 		//document.addEventListener('touchend', captureFairy, false);
@@ -247,7 +247,7 @@
 							drawText(homo3x3, true);
 					}
 				}
-			//	drawStatus(goodMatches, 0);
+				drawStatus(goodMatches, 0);
 			}
 		//	snapshot();
 		}
@@ -256,7 +256,7 @@
 			//arctx.clearRect(0, 0, width, height);
 			var fps = 1000.0 / (Date.now() - lastTime);
 			var tmp = "FPS:" + fps;
-			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + mks + " TPS:" + tps, 10, 10);
+			arctx.fillText(tmp.substr(0, tmp.indexOf(".") + 2) + "  MKS:" + window.innerWidth + " TPS:" + window.innerHeight, 10, 10);
 		}
 
         function drawShape(matrix3x3) {
