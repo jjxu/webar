@@ -7,10 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>WebAR</title>
+
 <style>
 	.div-relative{position:relative; color:#000; border:1px solid #000;}    
-	.div-screen{ position:relative; left:0px; top:0px; padding-bottom:85%;  background-color:transparent; width:100%; height:100%}
-	.div-screen video{ position:absolute; left:0px; top:0px; width:100%; height:100%}
+	.div-screen{ position:relative; left:0px; top:0px; padding-bottom:0%; width:100%; height:100%; text-align: center;}
+	.div-screen video{  left:0px; top:0px; width:100%; height:100%}
 	.div-canvas{ position:absolute; left:0px; top:0px; background-color:transparent; width:100%; height:100%} 
 	body{margin: 0; overflow: hidden;}
 </style>
@@ -20,7 +21,11 @@
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
 		<video id="webcam" autoplay style="display:block; width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
 	</div>
-
+	<div id="div-ctrl" style="display:table; padding-bottom:100%; width:100%; background:black;" >
+		<div style="display:table-cell; text-align:center; vertical-align:middle;">
+			<img id="img-control" src="./imgs/pause.png"></img>
+		</div>
+	</div>>
 	<div id="div-video" style="position:absolute; display:none; background-color:transparent;">
 		<video id="arvideo" preload style="width:100%; height: auto" src="./assets/xjp.mp4" type="video/mp4"></video>
 	</div>
@@ -35,7 +40,7 @@
 
 		var width = window.innerWidth;
 		//var height = window.innerHeight;
-		var height = width / 3 * 4;
+		var height = width / 9 * 16;
 		var size = width * height;
 		console.log("size:" + width + "*" + height);
 		var webcam = document.getElementById('webcam');
@@ -58,6 +63,9 @@
             	closeImgTop = vidTop - closeImg.height / 2;
    	 		}
 		);
+
+		var divctrl = document.getElementById('div-ctrl');
+		divctrl.style.height = (window.innerHeight - height) + 'px';
 /*
 		if (window.DeviceOrientationEvent) {
 			window.addEventListener('deviceorientation', function(event) {
@@ -168,7 +176,7 @@
 			//playVid();
 			//setInterval(imageProcessing, 100);
 
-			startScan();
+			//startScan();
 		}
 
 		function errorFunc(error) {
@@ -215,9 +223,9 @@
 		}
 
 		var closeImg = new Image();
-    	closeImg.src = "./imgs/close.jpg";
+    	closeImg.src = "./imgs/close.png";
     	var playImg = new Image();
-    	playImg.src = "./imgs/4.png";
+    	playImg.src = "./imgs/player.png";
 
     	var isPlaying = false;
 		function playVideo() {
@@ -241,12 +249,14 @@
 		}
 
 		function touch(event) {
-			//console.log();
+			
 			var x = event.changedTouches[0].clientX;
 			var y = event.changedTouches[0].clientY;
+			console.log(x + ":" + y);
+
 			if (!isPlaying) {
-				stopScan();
-				playVideo();
+			//	stopScan();
+			//	playVideo();
 			} else {
 				if (!closeVideo(x, y)) {
 					if (y >= vidTop && y <= (vidTop + vidHeight)) {
