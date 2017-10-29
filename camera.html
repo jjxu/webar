@@ -20,14 +20,14 @@
 	<div class="div-screen">
 		<video id="webcam" autoplay>Video tag not supported in your browser.</video>
 	</div>
-	<!--
+	
 	<div id="div-ctrl" style="display:table; width:100%; background:black;" >
 		<div style="display:table-cell;  vertical-align:middle;">
 			<img id="img-ctrl-pause" style="display:block; margin:0 auto" src="./img/p1.png"></img>
 			<img id="img-ctrl-play" style="display:none; margin:0 auto" src="./img/p2.png" ></img>
 		</div>
 	</div>
-	-->
+
 	<div class="div-canvas">
 		<canvas id="arcan" style="display:block"></canvas>
 	</div>
@@ -43,12 +43,12 @@
 		var videoHeight = 360;
 		var size = videoWidth * videoHeight;
 		console.log("size:" + window.innerWidth + " * " + window.innerHeight);
-/*
+
 		var divctrl = document.getElementById('div-ctrl');
-		divctrl.style.height = (window.innerHeight - height) + 'px';
-		var ctrlImgLeft = (width - 64) / 2;
-		var ctrlImgTop = height + (window.innerHeight - height - 64) / 2;
-*/
+		divctrl.style.height = (window.innerHeight - videoWidth) + 'px';
+		var ctrlImgLeft = (videoHeight - 64) / 2;
+		var ctrlImgTop = videoWidth + (window.innerHeight - videoWidth - 64) / 2;
+
 		var bufcan = document.createElement('canvas');
 		bufcan.width = videoWidth;
 		bufcan.height = videoHeight;
