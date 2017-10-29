@@ -39,9 +39,9 @@
 	<script type="text/javascript">
 		//var width = window.innerWidth;
 		//var height = window.innerHeight;
-		var width = 480;
-		var height = 640;
-		var size = width * height;
+		var videoWidth = 480;
+		var videoHeight = 640;
+		var size = videoWidth * videoHeight;
 		console.log("size:" + window.innerWidth + " * " + window.innerHeight);
 /*
 		var divctrl = document.getElementById('div-ctrl');
@@ -50,8 +50,8 @@
 		var ctrlImgTop = height + (window.innerHeight - height - 64) / 2;
 */
 		var bufcan = document.createElement('canvas');
-		bufcan.width = width;
-		bufcan.height = height;
+		bufcan.width = videoWidth;
+		bufcan.height = videoHeight;
 		var bufctx = bufcan.getContext('2d');
 
 		/*var gl = bufcan.getContext('webgl'); //experimental-webgl
@@ -64,8 +64,8 @@
 
 		var arcan = document.getElementById('arcan');
 		var arctx = arcan.getContext('2d');
-		arcan.width = width;
-		arcan.height = height;
+		arcan.width = videoWidth;
+		arcan.height = videoHeight;
 		arctx.fillStyle = 'rgb(74,255,254)';
 		arctx.strokeStyle = "rgb(74,255,254)";
         arctx.lineWidth = 2;
@@ -103,8 +103,8 @@ function initWebcam() {
 	webcam = document.getElementById('webcam');
 	//webcam.style.width = width + "px";
 	//webcam.style.height = height + "px";
-	webcam.width = width;
-	webcam.height = height;
+	webcam.width = videoWidth;
+	webcam.height = videoHeight;
 	
 	//MediaStreamTrack.getSources(function(sourceInfos) {
 	navigator.mediaDevices.enumerateDevices().then(function(devices) {
@@ -123,8 +123,8 @@ function openWebcam() {
 		navigator.getUserMedia({
 			video : {
 				facingMode: { exact: "environment" },
-				width : {exact: width },
-				height : { exact: height },
+				width : {exact: videoWidth },
+				height : { exact: videoHeight },
 				/*'optional' : [ {
 					'deviceId' : exArray[1] //0为前置摄像头，1为后置  
 				} ]*/
@@ -135,8 +135,8 @@ function openWebcam() {
 		navigator.webkitGetUserMedia({
 			video : {
 				facingMode: { exact: "environment" },
-				width : {exact: width },
-				height : { exact: height },
+				width : {exact: videoWidth },
+				height : { exact: videoHeight },
 			},
 			audio : false
 		}, succOpenWebcam, errorOpenWebcam);
