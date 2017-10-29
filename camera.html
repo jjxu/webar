@@ -103,8 +103,8 @@ function initWebcam() {
 	webcam = document.getElementById('webcam');
 	//webcam.style.width = width + "px";
 	//webcam.style.height = height + "px";
-	webcam.width = videoWidth;
-	webcam.height = videoHeight;
+	webcam.width = videoHeight;
+	webcam.height = videoWidth;
 	
 	//MediaStreamTrack.getSources(function(sourceInfos) {
 	navigator.mediaDevices.enumerateDevices().then(function(devices) {
