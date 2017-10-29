@@ -38,9 +38,11 @@
 	
 	<script type="text/javascript">
 
-		var width = window.innerWidth;
+		//var width = window.innerWidth;
 		//var height = window.innerHeight;
-		var height = width / 3 * 4;
+		//var height = width / 3 * 4;
+		var width = 480;
+		var height = 640;
 		var size = width * height;
 		console.log("size:" + width + "*" + height);
 		var webcam = document.getElementById('webcam');
@@ -135,8 +137,8 @@
 				navigator.getUserMedia({
 					video : {
 						deviceId : { exact: videoDevices[0]  },
-						width : { min: width, ideal : width, max: width },
-						height : { min: height, ideal : height, max: height },
+						width : { exact: width },
+						height : { exact height },
 						/*'optional' : [ {
 							'deviceId' : exArray[1] //0为前置摄像头，1为后置  
 						} ]*/
