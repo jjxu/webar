@@ -18,7 +18,7 @@
 </head>
 <body>
 	<div class="div-screen">
-		<video id="webcam" autoplay webkit-playsinline="true" x-webkit-airplay="true" playsinline="true" x5-video-player-type="h5" x5-video-player-fullscreen="true" style="display:block; width:100%; height: 100%;">Video tag not supported in your browser.</video>
+		<video id="webcam" autoplay -webkit-transform=scale(-1, 1) style="display:block; width:100%; height: 100%;">Video tag not supported in your browser.</video>
 	</div>
 	<!--
 	<div id="div-ctrl" style="display:table; width:100%; background:black;" >
@@ -75,7 +75,7 @@
 	//	initPattern();
 		
 		window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
-var videoDevices = []; //存储设备源ID
+		var videoDevices = []; //存储设备源ID
 		var webcam;
 		
 		initWebcam();
@@ -101,8 +101,10 @@ function hasGetUserMedia() {
 
 function initWebcam() {
 	webcam = document.getElementById('webcam');
-	webcam.style.width = width + "px";
-	webcam.style.height = height + "px";
+	//webcam.style.width = width + "px";
+	//webcam.style.height = height + "px";
+	webcam.width = width;
+	webcam.height = height;
 	
 	//MediaStreamTrack.getSources(function(sourceInfos) {
 	navigator.mediaDevices.enumerateDevices().then(function(devices) {
@@ -145,7 +147,9 @@ function openWebcam() {
 
 var localStream;
 function succOpenWebcam(stream) {
-	webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
+	//webcam.src = window.URL && window.URL.createObjectURL(stream) || stream;
+	webcam.srcObject = stream;
+	
 	//var inputTrack = stream.getVideoTracks()[0];
 	//video.src = URL.createObjectURL(stream);
 	//video.src = stream;
