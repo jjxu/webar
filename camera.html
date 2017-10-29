@@ -15,7 +15,7 @@
 </head>
 <body>
 	<div class="div-screen">
-		<video id="webcam" autoplay style="width:100%; height: 100%; margin:0;border-style:none;">Video tag not supported in your browser.</video>
+		<video id="webcam" autoplay style="width:100%; height: 100%; margin:0;border-style:solid;">Video tag not supported in your browser.</video>
 	</div>
 	
 	<div id="div-ctrl" style="display:table; width:100%; background:black; border-style:none;" >
@@ -42,7 +42,7 @@
 		console.log("size:" + window.innerWidth + " * " + window.innerHeight);
 
 		var divctrl = document.getElementById('div-ctrl');
-		divctrl.style.height = (window.innerHeight - videoWidth + 10) + 'px';
+		divctrl.style.height = (window.innerHeight - videoWidth) + 'px';
 		var ctrlImgLeft = (videoHeight - 64) / 2;
 		var ctrlImgTop = videoWidth + (window.innerHeight - videoWidth - 64) / 2;
 
