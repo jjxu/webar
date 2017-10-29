@@ -15,11 +15,11 @@
 </head>
 <body>
 	<div class="div-screen">
-		<video id="webcam" autoplay style="width:100%; height: 100%; margin:0;border:0;">Video tag not supported in your browser.</video>
+		<video id="webcam" autoplay style="width:100%; height: 100%; margin:0;border-style:none;">Video tag not supported in your browser.</video>
 	</div>
 	
-	<div id="div-ctrl" style="display:table; width:100%; background:black; border:0;" >
-		<div style="display:table-cell;  vertical-align:middle; height:100%; margin:0;border:0;">
+	<div id="div-ctrl" style="display:table; width:100%; background:black; border-style:none;" >
+		<div style="display:table-cell;  vertical-align:middle; height:100%; margin:0;border-style:none;">
 			<img id="img-ctrl-pause" style="display:block; margin:0 auto" src="./imgs/p1.png"></img>
 			<img id="img-ctrl-play" style="display:none; margin:0 auto" src="./imgs/p2.png" ></img>
 		</div>
@@ -98,10 +98,10 @@ function hasGetUserMedia() {
 
 function initWebcam() {
 	webcam = document.getElementById('webcam');
-	//webcam.style.width = width + "px";
-	//webcam.style.height = height + "px";
-	webcam.width = videoHeight;
-	webcam.height = videoWidth;
+	webcam.style.width = videoHeight + "px";
+	webcam.style.height = videoWidth + "px";
+	//webcam.width = videoHeight;
+	//webcam.height = videoWidth;
 	
 	//MediaStreamTrack.getSources(function(sourceInfos) {
 	navigator.mediaDevices.enumerateDevices().then(function(devices) {
