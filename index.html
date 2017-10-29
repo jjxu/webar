@@ -32,7 +32,7 @@
 <body>
 	<div class="div-screen">
 		<!--<video id="webcam" autoplay style="width:100%; height: 100%; object-fit: fill">您的浏览器不支持video标签。 </video> -->
-		<video id="webcam" autoplay style="display:block; width:100%; height: 100%;">您的浏览器不支持video标签。 </video>
+		<video id="webcam" autoplay>您的浏览器不支持video标签。 </video>
 	</div>
 	<div id="div-ctrl" style="display:table; width:100%; background:black;" >
 		<div style="display:table-cell;  vertical-align:middle;">
@@ -59,8 +59,8 @@
 		var size = width * height;
 		console.log("size:" + width + " * " + height);
 		var webcam = document.getElementById('webcam');
-		webcam.style.width = width + "px";
-		webcam.style.height = height + "px";
+		webcam.width = width;
+		webcam.height = height;
 
 		var divctrl = document.getElementById('div-ctrl');
 		divctrl.style.height = (window.innerHeight - height) + 'px';
@@ -123,9 +123,12 @@
 			if (navigator.getUserMedia) { // 标准的API
 				navigator.getUserMedia({
 					video : {
-						deviceId : { exact: videoDevices[0]  },
-						width : { min: width, ideal : width, max: width },
-						height : { min: height, ideal : height, max: height },
+						facingMode: { exact: "environment" },
+						width : {exact: height },
+						height : { exact: width },
+						//deviceId : { exact: videoDevices[0]  },
+						//width : { min: width, ideal : width, max: width },
+						//height : { min: height, ideal : height, max: height },
 						/*'optional' : [ {
 							'deviceId' : exArray[1] //0为前置摄像头，1为后置  
 						} ]*/
@@ -135,9 +138,9 @@
 			} else if (navigator.webkitGetUserMedia) { // WebKit 核心的API
 				navigator.webkitGetUserMedia({
 					video : {
-						deviceId : { exact: videoDevices[0] },
-						width : { min: width, ideal : width, max: width },
-						height : { min: height, ideal : height, max: height },
+						facingMode: { exact: "environment" },
+						width : {exact: height },
+						height : { exact: width },
 					},
 					audio : false
 				}, successFunc, errorFunc);
